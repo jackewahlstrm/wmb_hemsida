@@ -29,7 +29,7 @@ export default function OmOssPage() {
       {/* Hero */}
       <section className="py-20 sm:py-28 bg-zinc-50 dark:bg-zinc-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-amber-600 font-semibold text-sm uppercase tracking-wider mb-3">Om oss</p>
+          <p className="text-wmb-blue font-semibold text-sm uppercase tracking-wider mb-3">Om oss</p>
           <h1 className="text-4xl sm:text-5xl font-bold text-zinc-900 dark:text-white mb-6">
             Wahlströms Måleri & Bygg
           </h1>
@@ -46,7 +46,7 @@ export default function OmOssPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             {/* Image placeholder */}
             <div className="h-96 bg-zinc-200 dark:bg-zinc-800 rounded-2xl relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-600/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-br from-wmb-red/20 to-transparent" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-zinc-400 dark:text-zinc-600 text-sm">Bild på teamet</span>
               </div>
@@ -82,7 +82,7 @@ export default function OmOssPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="order-2 lg:order-1">
-              <p className="text-amber-600 font-semibold text-sm uppercase tracking-wider mb-3">VD & Grundare</p>
+              <p className="text-wmb-blue font-semibold text-sm uppercase tracking-wider mb-3">VD & Grundare</p>
               <h2 className="text-3xl font-bold text-zinc-900 dark:text-white mb-6">Namn Wahlström</h2>
               <div className="space-y-4 text-zinc-600 dark:text-zinc-400 leading-relaxed">
                 <p>
@@ -105,7 +105,7 @@ export default function OmOssPage() {
 
             {/* CEO Image placeholder */}
             <div className="order-1 lg:order-2 h-96 bg-zinc-200 dark:bg-zinc-800 rounded-2xl relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-600/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-br from-wmb-red/20 to-transparent" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-zinc-400 dark:text-zinc-600 text-sm">Bild på VD</span>
               </div>
@@ -118,7 +118,7 @@ export default function OmOssPage() {
       <section className="py-20 sm:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <p className="text-amber-600 font-semibold text-sm uppercase tracking-wider mb-3">Våra värderingar</p>
+            <p className="text-wmb-blue font-semibold text-sm uppercase tracking-wider mb-3">Våra värderingar</p>
             <h2 className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
               Det som driver oss framåt
             </h2>
@@ -127,7 +127,7 @@ export default function OmOssPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {values.map((value) => (
               <div key={value.title} className="text-center">
-                <div className="inline-flex items-center justify-center w-14 h-14 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-xl mb-4">
+                <div className="inline-flex items-center justify-center w-14 h-14 bg-wmb-blue/10 dark:bg-wmb-blue-dark/30 text-wmb-blue rounded-xl mb-4">
                   <value.icon size={28} />
                 </div>
                 <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">{value.title}</h3>
@@ -141,7 +141,7 @@ export default function OmOssPage() {
       {/* Notable clients */}
       <section className="py-20 sm:py-28 bg-zinc-50 dark:bg-zinc-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-amber-600 font-semibold text-sm uppercase tracking-wider mb-3">Kända kunder</p>
+          <p className="text-wmb-blue font-semibold text-sm uppercase tracking-wider mb-3">Kända kunder</p>
           <h2 className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white mb-12">
             Företag som litar på oss
           </h2>

@@ -2,6 +2,13 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --color-wmb-red: #eb4034;
+  --color-wmb-red-dark: #520712;
+  --color-wmb-blue: #0551eb;
+  --color-wmb-blue-dark: #072352;
+}
+
 html {
   scroll-behavior: smooth;
 }

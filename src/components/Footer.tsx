@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { Phone, Mail, MapPin } from 'lucide-react'
 
 export default function Footer() {
@@ -10,14 +11,14 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-amber-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-                W
-              </div>
-              <div>
-                <p className="font-bold text-white text-sm leading-tight">Wahlströms</p>
-                <p className="text-xs text-zinc-400 leading-tight">Måleri & Bygg</p>
-              </div>
+            <div className="mb-4">
+              <Image
+                src="/wmb_logga_copy.png"
+                alt="Wahlströms Måleri & Bygg"
+                width={200}
+                height={70}
+                className="h-16 w-auto brightness-0 invert"
+              />
             </div>
             <p className="text-sm text-zinc-400 leading-relaxed">
               Professionellt måleri och byggarbete med kvalitet i fokus. Vi har lång erfarenhet av både privata och kommersiella projekt.
@@ -38,7 +39,7 @@ export default function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-zinc-400 hover:text-amber-500 transition-colors"
+                    className="text-sm text-zinc-400 hover:text-wmb-red transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -64,19 +65,19 @@ export default function Footer() {
             <h3 className="text-white font-semibold mb-4">Kontakt</h3>
             <ul className="space-y-3">
               <li className="flex items-center gap-3">
-                <Phone size={16} className="text-amber-500 shrink-0" />
-                <a href="tel:+46701234567" className="text-sm text-zinc-400 hover:text-amber-500 transition-colors">
+                <Phone size={16} className="text-wmb-blue shrink-0" />
+                <a href="tel:+46701234567" className="text-sm text-zinc-400 hover:text-wmb-red transition-colors">
                   070-123 45 67
                 </a>
               </li>
               <li className="flex items-center gap-3">
-                <Mail size={16} className="text-amber-500 shrink-0" />
-                <a href="mailto:info@wahlstromsmaleri.se" className="text-sm text-zinc-400 hover:text-amber-500 transition-colors">
+                <Mail size={16} className="text-wmb-blue shrink-0" />
+                <a href="mailto:info@wahlstromsmaleri.se" className="text-sm text-zinc-400 hover:text-wmb-red transition-colors">
                   info@wahlstromsmaleri.se
                 </a>
               </li>
               <li className="flex items-start gap-3">
-                <MapPin size={16} className="text-amber-500 shrink-0 mt-0.5" />
+                <MapPin size={16} className="text-wmb-blue shrink-0 mt-0.5" />
                 <span className="text-sm text-zinc-400">
                   Stockholm, Sverige
                 </span>
@@ -91,7 +92,7 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} Wahlströms Måleri & Bygg. Alla rättigheter förbehållna.
           </p>
           <div className="flex items-center gap-6">
-            <Link href="/kontakt" className="text-sm text-zinc-500 hover:text-amber-500 transition-colors">
+            <Link href="/kontakt" className="text-sm text-zinc-500 hover:text-wmb-red transition-colors">
               Integritetspolicy
             </Link>
           </div>

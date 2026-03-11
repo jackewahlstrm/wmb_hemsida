@@ -1,7 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { Phone, Mail, MapPin, Clock, Send, CheckCircle } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Phone, Mail, MapPin, Clock, Send, CheckCircle, Paperclip, X } from 'lucide-react'
+
+const MAX_FILES = 5
+const MAX_FILE_SIZE = 10 * 1024 * 1024
 
 export default function KontaktPage() {
   const [formData, setFormData] = useState({
@@ -11,22 +14,33 @@ export default function KontaktPage() {
     service: '',
     message: '',
   })
+  const [files, setFiles] = useState<File[]>([])
+  const [fileError, setFileError] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatus('loading')
 
     try {
+      const body = new FormData()
+      body.append('name', formData.name)
+      body.append('email', formData.email)
+      body.append('phone', formData.phone)
+      body.append('service', formData.service)
+      body.append('message', formData.message)
+      files.forEach((file) => body.append('files', file))
+
       const res = await fetch('/api/contact', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body,
       })
 
       if (res.ok) {
         setStatus('success')
         setFormData({ name: '', email: '', phone: '', service: '', message: '' })
+        setFiles([])
       } else {
         setStatus('error')
       }
@@ -39,12 +53,30 @@ export default function KontaktPage() {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFileError('')
+    const selected = Array.from(e.target.files || [])
+    const tooLarge = selected.find((f) => f.size > MAX_FILE_SIZE)
+    if (tooLarge) { setFileError(`"${tooLarge.name}" är för stor (max 10MB).`); return }
+    if (files.length + selected.length > MAX_FILES) { setFileError(`Max ${MAX_FILES} filer.`); return }
+    setFiles((prev) => [...prev, ...selected])
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const removeFile = (index: number) => { setFiles((prev) => prev.filter((_, i) => i !== index)); setFileError('') }
+
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
+
   return (
     <>
       {/* Hero */}
       <section className="py-20 sm:py-28 bg-zinc-50 dark:bg-zinc-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-amber-600 font-semibold text-sm uppercase tracking-wider mb-3">Kontakta oss</p>
+          <p className="text-wmb-blue font-semibold text-sm uppercase tracking-wider mb-3">Kontakta oss</p>
           <h1 className="text-4xl sm:text-5xl font-bold text-zinc-900 dark:text-white mb-6">
             Vi hörs gärna från dig
           </h1>
@@ -65,31 +97,31 @@ export default function KontaktPage() {
                 <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-6">Kontaktuppgifter</h2>
                 <div className="space-y-5">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-lg flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 bg-wmb-blue/10 dark:bg-wmb-blue-dark/30 text-wmb-blue rounded-lg flex items-center justify-center shrink-0">
                       <Phone size={20} />
                     </div>
                     <div>
                       <p className="font-medium text-zinc-900 dark:text-white text-sm">Telefon</p>
-                      <a href="tel:+46701234567" className="text-zinc-600 dark:text-zinc-400 hover:text-amber-600 transition-colors">
+                      <a href="tel:+46701234567" className="text-zinc-600 dark:text-zinc-400 hover:text-wmb-red transition-colors">
                         070-123 45 67
                       </a>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-lg flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 bg-wmb-blue/10 dark:bg-wmb-blue-dark/30 text-wmb-blue rounded-lg flex items-center justify-center shrink-0">
                       <Mail size={20} />
                     </div>
                     <div>
                       <p className="font-medium text-zinc-900 dark:text-white text-sm">E-post</p>
-                      <a href="mailto:info@wahlstromsmaleri.se" className="text-zinc-600 dark:text-zinc-400 hover:text-amber-600 transition-colors">
+                      <a href="mailto:info@wahlstromsmaleri.se" className="text-zinc-600 dark:text-zinc-400 hover:text-wmb-red transition-colors">
                         info@wahlstromsmaleri.se
                       </a>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-lg flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 bg-wmb-blue/10 dark:bg-wmb-blue-dark/30 text-wmb-blue rounded-lg flex items-center justify-center shrink-0">
                       <MapPin size={20} />
                     </div>
                     <div>
@@ -99,7 +131,7 @@ export default function KontaktPage() {
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-lg flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 bg-wmb-blue/10 dark:bg-wmb-blue-dark/30 text-wmb-blue rounded-lg flex items-center justify-center shrink-0">
                       <Clock size={20} />
                     </div>
                     <div>
@@ -120,7 +152,7 @@ export default function KontaktPage() {
                   <p className="text-zinc-600 dark:text-zinc-400">Vi återkommer till dig inom 24 timmar.</p>
                   <button
                     onClick={() => setStatus('idle')}
-                    className="mt-6 px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors text-sm font-medium"
+                    className="mt-6 px-6 py-2 bg-wmb-red hover:bg-wmb-red/90 text-white rounded-lg transition-colors text-sm font-medium"
                   >
                     Skicka nytt meddelande
                   </button>
@@ -139,7 +171,7 @@ export default function KontaktPage() {
                         required
                         value={formData.name}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-wmb-blue focus:border-transparent transition-all"
                         placeholder="Ditt namn"
                       />
                     </div>
@@ -154,7 +186,7 @@ export default function KontaktPage() {
                         required
                         value={formData.email}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-wmb-blue focus:border-transparent transition-all"
                         placeholder="din@epost.se"
                       />
                     </div>
@@ -171,7 +203,7 @@ export default function KontaktPage() {
                         name="phone"
                         value={formData.phone}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-wmb-blue focus:border-transparent transition-all"
                         placeholder="070-123 45 67"
                       />
                     </div>
@@ -184,7 +216,7 @@ export default function KontaktPage() {
                         name="service"
                         value={formData.service}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-wmb-blue focus:border-transparent transition-all"
                       >
                         <option value="">Välj tjänst</option>
                         <option value="Invändig målning">Invändig målning</option>
@@ -210,9 +242,54 @@ export default function KontaktPage() {
                       rows={6}
                       value={formData.message}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all resize-none"
+                      className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-wmb-blue focus:border-transparent transition-all resize-none"
                       placeholder="Berätta om ditt projekt..."
                     />
+                  </div>
+
+                  {/* File upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">
+                      Bifoga filer
+                    </label>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept="image/*,.pdf,.doc,.docx"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="kontakt-file-upload"
+                    />
+                    <label
+                      htmlFor="kontakt-file-upload"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-600 dark:text-zinc-300 text-sm cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+                    >
+                      <Paperclip size={16} />
+                      Välj filer
+                    </label>
+                    <span className="text-zinc-400 text-xs ml-3">Max {MAX_FILES} filer, 10MB/st (bilder, PDF, Word)</span>
+
+                    {fileError && <p className="text-red-500 text-xs mt-1">{fileError}</p>}
+
+                    {files.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        {files.map((file, i) => (
+                          <div key={i} className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800 rounded-lg px-3 py-2 border border-zinc-200 dark:border-zinc-700">
+                            <Paperclip size={14} className="shrink-0 text-zinc-400" />
+                            <span className="truncate">{file.name}</span>
+                            <span className="text-zinc-400 shrink-0 text-xs">({formatSize(file.size)})</span>
+                            <button
+                              type="button"
+                              onClick={() => removeFile(i)}
+                              className="ml-auto shrink-0 p-1 hover:text-red-500 transition-colors"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {status === 'error' && (
@@ -224,7 +301,7 @@ export default function KontaktPage() {
                   <button
                     type="submit"
                     disabled={status === 'loading'}
-                    className="inline-flex items-center gap-2 px-8 py-4 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400 text-white font-semibold rounded-xl transition-all hover:scale-105 disabled:hover:scale-100"
+                    className="inline-flex items-center gap-2 px-8 py-4 bg-wmb-red hover:bg-wmb-red/90 disabled:bg-wmb-red/50 text-white font-semibold rounded-xl transition-all hover:scale-105 disabled:hover:scale-100"
                   >
                     {status === 'loading' ? (
                       <>

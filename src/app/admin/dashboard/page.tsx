@@ -77,7 +77,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center">
-        <div className="w-8 h-8 border-3 border-amber-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-3 border-wmb-red border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
             onClick={() => setActiveTab(tab.id)}
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               activeTab === tab.id
-                ? 'bg-amber-600 text-white'
+                ? 'bg-wmb-red text-white'
                 : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
             }`}
           >
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
             ].map((stat) => (
               <div key={stat.label} className="p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
                 <div className="flex items-center gap-3 mb-2">
-                  <stat.icon size={20} className="text-amber-600" />
+                  <stat.icon size={20} className="text-wmb-blue" />
                   <span className="text-sm text-zinc-500 dark:text-zinc-400">{stat.label}</span>
                 </div>
                 <p className="text-2xl font-bold text-zinc-900 dark:text-white">{stat.value}</p>
@@ -164,7 +164,7 @@ export default function AdminDashboard() {
                     className={`p-4 rounded-lg border transition-colors ${
                       msg.read
                         ? 'bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700'
-                        : 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800'
+                        : 'bg-wmb-blue/5 dark:bg-wmb-blue-dark/10 border-wmb-blue/20 dark:border-wmb-blue-dark'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-4">
@@ -205,7 +205,7 @@ export default function AdminDashboard() {
                   className={`p-6 bg-white dark:bg-zinc-900 rounded-xl border transition-colors ${
                     msg.read
                       ? 'border-zinc-200 dark:border-zinc-800'
-                      : 'border-amber-300 dark:border-amber-700'
+                      : 'border-wmb-blue/30 dark:border-wmb-blue-dark'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-4 mb-3">
@@ -310,7 +310,7 @@ function ProjectsTab({
         <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Projekt</h2>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-wmb-red hover:bg-wmb-red/90 text-white text-sm font-medium rounded-lg transition-colors"
         >
           {showForm ? <X size={18} /> : <Plus size={18} />}
           {showForm ? 'Avbryt' : 'Nytt projekt'}
@@ -327,7 +327,7 @@ function ProjectsTab({
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-wmb-blue"
                 placeholder="Projektets titel"
               />
             </div>
@@ -336,7 +336,7 @@ function ProjectsTab({
               <select
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
-                className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-wmb-blue"
               >
                 <option value="">Välj kategori</option>
                 <option value="Invändig">Invändig</option>
@@ -352,7 +352,7 @@ function ProjectsTab({
               type="text"
               value={form.client}
               onChange={(e) => setForm({ ...form, client: e.target.value })}
-              className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-wmb-blue"
               placeholder="Kundens namn"
             />
           </div>
@@ -362,7 +362,7 @@ function ProjectsTab({
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               rows={3}
-              className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+              className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-wmb-blue resize-none"
               placeholder="Beskriv projektet..."
             />
           </div>
@@ -372,7 +372,7 @@ function ProjectsTab({
               id="featured"
               checked={form.featured}
               onChange={(e) => setForm({ ...form, featured: e.target.checked })}
-              className="w-4 h-4 text-amber-600 rounded border-zinc-300 focus:ring-amber-500"
+              className="w-4 h-4 text-wmb-red rounded border-zinc-300 focus:ring-wmb-blue"
             />
             <label htmlFor="featured" className="text-sm text-zinc-600 dark:text-zinc-300">
               Visa på startsidan
@@ -381,7 +381,7 @@ function ProjectsTab({
           <button
             onClick={handleSave}
             disabled={saving || !form.title || !form.description}
-            className="inline-flex items-center gap-2 px-6 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400 text-white text-sm font-medium rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-2 bg-wmb-red hover:bg-wmb-red/90 disabled:bg-wmb-red/50 text-white text-sm font-medium rounded-lg transition-colors"
           >
             <Save size={16} />
             {saving ? 'Sparar...' : 'Spara projekt'}
@@ -405,7 +405,7 @@ function ProjectsTab({
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div>
                   <h3 className="font-semibold text-zinc-900 dark:text-white text-sm">{project.title}</h3>
-                  <p className="text-xs text-amber-600">{project.category}</p>
+                  <p className="text-xs text-wmb-blue">{project.category}</p>
                 </div>
                 <button
                   onClick={() => onDelete(project.id)}

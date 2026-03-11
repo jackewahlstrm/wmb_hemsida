@@ -76,7 +76,7 @@ export default function ProjektPage() {
       {/* Hero */}
       <section className="py-20 sm:py-28 bg-zinc-50 dark:bg-zinc-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-amber-600 font-semibold text-sm uppercase tracking-wider mb-3">Våra projekt</p>
+          <p className="text-wmb-blue font-semibold text-sm uppercase tracking-wider mb-3">Våra projekt</p>
           <h1 className="text-4xl sm:text-5xl font-bold text-zinc-900 dark:text-white mb-6">
             Arbeten vi är stolta över
           </h1>
@@ -99,7 +99,7 @@ export default function ProjektPage() {
                 onClick={() => setActiveCategory(cat)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   activeCategory === cat
-                    ? 'bg-amber-600 text-white'
+                    ? 'bg-wmb-red text-white'
                     : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                 }`}
               >
@@ -117,19 +117,19 @@ export default function ProjektPage() {
               >
                 {/* Image placeholder */}
                 <div className="h-56 bg-zinc-200 dark:bg-zinc-800 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-600/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-wmb-red/20 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-zinc-400 dark:text-zinc-600 text-sm">Bild kommer</span>
                   </div>
                   <div className="absolute top-4 left-4">
-                    <span className="px-3 py-1 bg-amber-600 text-white text-xs font-medium rounded-full">
+                    <span className="px-3 py-1 bg-wmb-red text-white text-xs font-medium rounded-full">
                       {project.category}
                     </span>
                   </div>
                 </div>
 
                 <div className="p-6">
-                  <p className="text-xs text-amber-600 font-medium mb-1">{project.client}</p>
+                  <p className="text-xs text-wmb-blue font-medium mb-1">{project.client}</p>
                   <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">{project.title}</h3>
                   <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">{project.description}</p>
                 </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState } from 'react'
 import { Menu, X, Sun, Moon } from 'lucide-react'
 import { useTheme } from '@/lib/theme'
@@ -20,16 +21,17 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+        <div className="flex items-center justify-between h-20 sm:h-26 py-2 sm:py-3">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-600 rounded-lg flex items-center justify-center text-white font-bold text-lg sm:text-xl group-hover:bg-amber-700 transition-colors">
-              W
-            </div>
-            <div className="hidden sm:block">
-              <p className="font-bold text-zinc-900 dark:text-white text-sm leading-tight">Wahlströms</p>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-tight">Måleri & Bygg</p>
-            </div>
+          <Link href="/" className="flex items-center group">
+            <Image
+              src="/wmb_logga_copy.png"
+              alt="Wahlströms Måleri & Bygg"
+              width={220}
+              height={72}
+              className="h-14 sm:h-18 w-auto dark:brightness-0 dark:invert"
+              priority
+            />
           </Link>
 
           {/* Desktop nav */}
@@ -38,7 +40,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="px-4 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-amber-600 dark:hover:text-amber-500 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
+                className="px-4 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-300 hover:text-wmb-red dark:hover:text-wmb-red rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
               >
                 {link.label}
               </Link>
@@ -59,7 +61,7 @@ export default function Navbar() {
             {/* CTA button */}
             <Link
               href="/kontakt"
-              className="hidden md:inline-flex items-center px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-colors"
+              className="hidden md:inline-flex items-center px-5 py-2.5 bg-wmb-red hover:bg-wmb-red/90 text-white text-sm font-medium rounded-lg transition-colors"
             >
               Kontakta oss
             </Link>
@@ -85,7 +87,7 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setIsOpen(false)}
-                className="block px-4 py-3 text-base font-medium text-zinc-600 dark:text-zinc-300 hover:text-amber-600 dark:hover:text-amber-500 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
+                className="block px-4 py-3 text-base font-medium text-zinc-600 dark:text-zinc-300 hover:text-wmb-red dark:hover:text-wmb-red rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
               >
                 {link.label}
               </Link>
@@ -93,7 +95,7 @@ export default function Navbar() {
             <Link
               href="/kontakt"
               onClick={() => setIsOpen(false)}
-              className="block px-4 py-3 mt-2 text-center bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors"
+              className="block px-4 py-3 mt-2 text-center bg-wmb-red hover:bg-wmb-red/90 text-white font-medium rounded-lg transition-colors"
             >
               Kontakta oss
             </Link>

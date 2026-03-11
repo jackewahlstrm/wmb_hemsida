@@ -65,7 +65,7 @@ export default function TjansterPage() {
       {/* Hero */}
       <section className="py-20 sm:py-28 bg-zinc-50 dark:bg-zinc-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-amber-600 font-semibold text-sm uppercase tracking-wider mb-3">Våra tjänster</p>
+          <p className="text-wmb-blue font-semibold text-sm uppercase tracking-wider mb-3">Våra tjänster</p>
           <h1 className="text-4xl sm:text-5xl font-bold text-zinc-900 dark:text-white mb-6">
             Allt inom måleri & bygg
           </h1>
@@ -85,7 +85,7 @@ export default function TjansterPage() {
                 key={service.title}
                 className="group p-8 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 hover:shadow-xl hover:shadow-zinc-200/50 dark:hover:shadow-zinc-900/50 transition-all duration-300 hover:-translate-y-1"
               >
-                <div className="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <div className="w-14 h-14 bg-wmb-blue/10 dark:bg-wmb-blue-dark/30 text-wmb-blue rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <service.icon size={28} />
                 </div>
                 <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-3">{service.title}</h3>
@@ -93,7 +93,7 @@ export default function TjansterPage() {
                 <ul className="space-y-2">
                   {service.features.map((feature) => (
                     <li key={feature} className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-                      <div className="w-1.5 h-1.5 bg-amber-500 rounded-full shrink-0" />
+                      <div className="w-1.5 h-1.5 bg-wmb-red rounded-full shrink-0" />
                       {feature}
                     </li>
                   ))}
@@ -115,7 +115,7 @@ export default function TjansterPage() {
           </p>
           <Link
             href="/kontakt"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl transition-all hover:scale-105"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-wmb-red hover:bg-wmb-red/90 text-white font-semibold rounded-xl transition-all hover:scale-105"
           >
             Begär offert
             <ArrowRight size={18} />

@@ -25,7 +25,7 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100`}>
         <ThemeProvider>
           <Navbar />
-          <main className="min-h-screen pt-16 sm:pt-20">
+          <main className="min-h-screen pt-20 sm:pt-26">
             {children}
           </main>
           <Footer />

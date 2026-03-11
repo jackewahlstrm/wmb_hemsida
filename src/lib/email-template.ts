@@ -4,9 +4,10 @@ interface ContactEmailProps {
   phone: string
   service: string
   message: string
+  attachmentNames?: string[]
 }
 
-export function generateContactEmail({ name, email, phone, service, message }: ContactEmailProps): string {
+export function generateContactEmail({ name, email, phone, service, message, attachmentNames }: ContactEmailProps): string {
   return `
 <!DOCTYPE html>
 <html lang="sv">
@@ -22,7 +23,7 @@ export function generateContactEmail({ name, email, phone, service, message }: C
 
           <!-- Header -->
           <tr>
-            <td style="background: linear-gradient(135deg, #d97706, #b45309); padding: 40px 40px 30px; border-radius: 16px 16px 0 0; text-align: center;">
+            <td style="background: linear-gradient(135deg, #eb4034, #c4342b); padding: 40px 40px 30px; border-radius: 16px 16px 0 0; text-align: center;">
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
                 <tr>
                   <td style="width: 48px; height: 48px; background-color: rgba(255,255,255,0.2); border-radius: 12px; text-align: center; vertical-align: middle;">
@@ -63,7 +64,7 @@ export function generateContactEmail({ name, email, phone, service, message }: C
                       <tr>
                         <td style="padding: 8px 0; border-bottom: 1px solid #e4e4e7;">
                           <span style="color: #71717a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">E-post</span><br>
-                          <a href="mailto:${email}" style="color: #d97706; font-size: 15px; font-weight: 500; text-decoration: none;">${email}</a>
+                          <a href="mailto:${email}" style="color: #eb4034; font-size: 15px; font-weight: 500; text-decoration: none;">${email}</a>
                         </td>
                       </tr>
                       <tr>
@@ -95,11 +96,25 @@ export function generateContactEmail({ name, email, phone, service, message }: C
                 </tr>
               </table>
 
+              <!-- Attachments -->
+              ${attachmentNames && attachmentNames.length > 0 ? `
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 16px;">
+                <tr>
+                  <td>
+                    <p style="margin: 0 0 8px; color: #71717a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Bifogade filer (${attachmentNames.length} st)</p>
+                    <div style="background-color: #fafafa; border-radius: 12px; padding: 16px; border: 1px solid #e4e4e7;">
+                      ${attachmentNames.map(n => `<p style="margin: 4px 0; color: #27272a; font-size: 14px;">📎 ${n}</p>`).join('')}
+                    </div>
+                  </td>
+                </tr>
+              </table>
+              ` : ''}
+
               <!-- CTA -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 32px;">
                 <tr>
                   <td align="center">
-                    <a href="mailto:${email}" style="display: inline-block; padding: 14px 32px; background-color: #d97706; color: white; font-size: 15px; font-weight: 600; text-decoration: none; border-radius: 12px;">
+                    <a href="mailto:${email}" style="display: inline-block; padding: 14px 32px; background-color: #eb4034; color: white; font-size: 15px; font-weight: 600; text-decoration: none; border-radius: 12px;">
                       Svara kunden
                     </a>
                   </td>
