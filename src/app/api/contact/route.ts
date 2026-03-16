@@ -1,92 +1,97 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Resend } from 'resend'
 import { supabase } from '@/lib/supabase'
 import { generateContactEmail } from '@/lib/email-template'
+import { validateEmail, validateMobile, validateLandline } from '@/lib/validation'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: NextRequest) {
   try {
     const contentType = request.headers.get('content-type') || ''
-    let name: string, email: string, phone: string, service: string, message: string
+    let firstName: string, lastName: string, email: string, mobile: string, landline: string, service: string, message: string
     let attachmentNames: string[] = []
-    let attachments: { filename: string; content: string }[] = []
+    let attachments: { filename: string; content: Buffer }[] = []
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData()
-      name = formData.get('name') as string || ''
-      email = formData.get('email') as string || ''
-      phone = formData.get('phone') as string || ''
-      service = formData.get('service') as string || ''
-      message = formData.get('message') as string || ''
+      firstName = (formData.get('firstName') as string || '').trim()
+      lastName = (formData.get('lastName') as string || '').trim()
+      email = (formData.get('email') as string || '').trim()
+      mobile = (formData.get('mobile') as string || '').trim()
+      landline = (formData.get('landline') as string || '').trim()
+      service = (formData.get('service') as string || '').trim()
+      message = (formData.get('message') as string || '').trim()
 
       const files = formData.getAll('files') as File[]
       for (const file of files) {
         if (file.size > 0) {
           attachmentNames.push(file.name)
           const buffer = Buffer.from(await file.arrayBuffer())
-          attachments.push({
-            filename: file.name,
-            content: buffer.toString('base64'),
-          })
+          attachments.push({ filename: file.name, content: buffer })
         }
       }
     } else {
       const body = await request.json()
-      name = body.name
-      email = body.email
-      phone = body.phone
-      service = body.service
-      message = body.message
+      firstName = (body.firstName || '').trim()
+      lastName = (body.lastName || '').trim()
+      email = (body.email || '').trim()
+      mobile = (body.mobile || '').trim()
+      landline = (body.landline || '').trim()
+      service = (body.service || '').trim()
+      message = (body.message || '').trim()
     }
 
-    if (!name || !email || !message) {
-      return NextResponse.json(
-        { error: 'Namn, e-post och meddelande krävs.' },
-        { status: 400 }
-      )
+    // Validation
+    const errors: string[] = []
+    if (!firstName) errors.push('Förnamn krävs')
+    if (!lastName) errors.push('Efternamn krävs')
+    if (!email) errors.push('E-post krävs')
+    else if (!validateEmail(email)) errors.push('Ogiltig e-postadress')
+    if (!mobile && !landline) errors.push('Minst ett telefonnummer krävs')
+    if (mobile && !validateMobile(mobile)) errors.push('Ogiltigt mobilnummer')
+    if (landline && !validateLandline(landline)) errors.push('Ogiltigt telefonnummer')
+    if (!message) errors.push('Meddelande krävs')
+
+    if (errors.length > 0) {
+      return NextResponse.json({ error: errors.join('. ') + '.' }, { status: 400 })
     }
 
-    // Save to Supabase
-    const { error: dbError } = await supabase
-      .from('contact_messages')
-      .insert([{ name, email, phone, service, message, attachments: attachmentNames, read: false }])
+    const name = `${firstName} ${lastName}`
+    const phone = [mobile, landline].filter(Boolean).join(' / ')
 
-    if (dbError) {
-      console.error('Database error:', dbError)
+    // Save to Supabase (skip if placeholder)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (supabaseUrl && !supabaseUrl.includes('placeholder')) {
+      const { error: dbError } = await supabase
+        .from('contact_messages')
+        .insert([{ name, email, phone, service, message, attachments: attachmentNames, read: false }])
+
+      if (dbError) {
+        console.error('Database error:', dbError)
+      }
     }
 
     // Send email via Resend
-    const resendKey = process.env.RESEND_API_KEY
-    const contactEmail = process.env.CONTACT_EMAIL
+    const contactEmail = process.env.CONTACT_EMAIL || 'jackewahlstrm@gmail.com'
+    const htmlContent = generateContactEmail({ name, email, phone, service, message, attachmentNames })
 
-    if (resendKey && resendKey !== 'your-resend-api-key') {
-      const htmlContent = generateContactEmail({ name, email, phone, service, message, attachmentNames })
+    const { error: emailError } = await resend.emails.send({
+      from: 'Wahlströms Måleri <onboarding@resend.dev>',
+      to: [contactEmail],
+      subject: `Ny kontaktförfrågan från ${name}`,
+      html: htmlContent,
+      attachments: attachments.length > 0 ? attachments : undefined,
+    })
 
-      const emailPayload: Record<string, unknown> = {
-        from: 'Wahlströms Måleri <noreply@wahlstromsmaleri.se>',
-        to: [contactEmail || 'info@wahlstromsmaleri.se'],
-        subject: `Ny kontaktförfrågan från ${name}`,
-        html: htmlContent,
-      }
-
-      if (attachments.length > 0) {
-        emailPayload.attachments = attachments
-      }
-
-      await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${resendKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(emailPayload),
-      })
+    if (emailError) {
+      console.error('Email error:', emailError)
+      return NextResponse.json({ error: 'Kunde inte skicka mejlet.' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Contact form error:', error)
-    return NextResponse.json(
-      { error: 'Något gick fel. Försök igen.' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Något gick fel. Försök igen.' }, { status: 500 })
   }
 }

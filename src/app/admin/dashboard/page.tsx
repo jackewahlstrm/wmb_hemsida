@@ -1,32 +1,33 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   LogOut,
   LayoutDashboard,
   FolderOpen,
-  MessageSquare,
   Users,
-  FileText,
+  Settings,
   Plus,
   Trash2,
-  Eye,
-  EyeOff,
   X,
   Save,
   Image as ImageIcon,
+  Upload,
+  Pencil,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import type { Project, ContactMessage } from '@/lib/types'
+import { uploadImage } from '@/lib/cloudinary'
+import type { Project, Client as ClientType, SiteContent } from '@/lib/types'
 
-type Tab = 'overview' | 'projects' | 'messages' | 'clients' | 'content'
+type Tab = 'overview' | 'projects' | 'clients' | 'settings'
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('overview')
   const [loading, setLoading] = useState(true)
   const [projects, setProjects] = useState<Project[]>([])
-  const [messages, setMessages] = useState<ContactMessage[]>([])
+  const [clients, setClients] = useState<ClientType[]>([])
+  const [siteContent, setSiteContent] = useState<SiteContent[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -44,34 +45,19 @@ export default function AdminDashboard() {
   }
 
   const loadData = async () => {
-    const [projectsRes, messagesRes] = await Promise.all([
+    const [projectsRes, clientsRes, contentRes] = await Promise.all([
       supabase.from('projects').select('*').order('created_at', { ascending: false }),
-      supabase.from('contact_messages').select('*').order('created_at', { ascending: false }),
+      supabase.from('clients').select('*').order('created_at', { ascending: false }),
+      supabase.from('site_content').select('*'),
     ])
     if (projectsRes.data) setProjects(projectsRes.data)
-    if (messagesRes.data) setMessages(messagesRes.data)
+    if (clientsRes.data) setClients(clientsRes.data)
+    if (contentRes.data) setSiteContent(contentRes.data)
   }
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push('/admin')
-  }
-
-  const deleteProject = async (id: string) => {
-    if (!confirm('Är du säker på att du vill ta bort detta projekt?')) return
-    await supabase.from('projects').delete().eq('id', id)
-    setProjects(projects.filter((p) => p.id !== id))
-  }
-
-  const toggleMessageRead = async (id: string, read: boolean) => {
-    await supabase.from('contact_messages').update({ read: !read }).eq('id', id)
-    setMessages(messages.map((m) => (m.id === id ? { ...m, read: !read } : m)))
-  }
-
-  const deleteMessage = async (id: string) => {
-    if (!confirm('Är du säker på att du vill ta bort detta meddelande?')) return
-    await supabase.from('contact_messages').delete().eq('id', id)
-    setMessages(messages.filter((m) => m.id !== id))
   }
 
   if (loading) {
@@ -85,12 +71,9 @@ export default function AdminDashboard() {
   const tabs = [
     { id: 'overview' as Tab, label: 'Översikt', icon: LayoutDashboard },
     { id: 'projects' as Tab, label: 'Projekt', icon: FolderOpen },
-    { id: 'messages' as Tab, label: 'Meddelanden', icon: MessageSquare, badge: messages.filter((m) => !m.read).length },
     { id: 'clients' as Tab, label: 'Kunder', icon: Users },
-    { id: 'content' as Tab, label: 'Innehåll', icon: FileText },
+    { id: 'settings' as Tab, label: 'Inställningar', icon: Settings },
   ]
-
-  const unreadMessages = messages.filter((m) => !m.read).length
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -123,185 +106,110 @@ export default function AdminDashboard() {
           >
             <tab.icon size={18} />
             {tab.label}
-            {tab.badge ? (
-              <span className="ml-1 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">{tab.badge}</span>
-            ) : null}
           </button>
         ))}
       </div>
 
       {/* Tab Content */}
       {activeTab === 'overview' && (
-        <div className="space-y-8">
-          {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { label: 'Projekt', value: projects.length, icon: FolderOpen },
-              { label: 'Olästa meddelanden', value: unreadMessages, icon: MessageSquare },
-              { label: 'Totala meddelanden', value: messages.length, icon: FileText },
-              { label: 'Status', value: 'Aktiv', icon: LayoutDashboard },
-            ].map((stat) => (
-              <div key={stat.label} className="p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
-                <div className="flex items-center gap-3 mb-2">
-                  <stat.icon size={20} className="text-wmb-blue" />
-                  <span className="text-sm text-zinc-500 dark:text-zinc-400">{stat.label}</span>
-                </div>
-                <p className="text-2xl font-bold text-zinc-900 dark:text-white">{stat.value}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Recent messages */}
-          <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6">
-            <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">Senaste meddelanden</h2>
-            {messages.length === 0 ? (
-              <p className="text-zinc-500 dark:text-zinc-400 text-sm">Inga meddelanden ännu.</p>
-            ) : (
-              <div className="space-y-3">
-                {messages.slice(0, 5).map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`p-4 rounded-lg border transition-colors ${
-                      msg.read
-                        ? 'bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700'
-                        : 'bg-wmb-blue/5 dark:bg-wmb-blue-dark/10 border-wmb-blue/20 dark:border-wmb-blue-dark'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <p className="font-medium text-zinc-900 dark:text-white text-sm">{msg.name}</p>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400">{msg.email}</p>
-                        <p className="text-sm text-zinc-600 dark:text-zinc-300 mt-1 truncate">{msg.message}</p>
-                      </div>
-                      <span className="text-xs text-zinc-400 shrink-0">
-                        {new Date(msg.created_at).toLocaleDateString('sv-SE')}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        <OverviewTab projects={projects} clients={clients} />
       )}
-
       {activeTab === 'projects' && (
-        <ProjectsTab projects={projects} onDelete={deleteProject} onReload={loadData} />
+        <ProjectsTab projects={projects} setProjects={setProjects} onReload={loadData} />
       )}
-
-      {activeTab === 'messages' && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Kontaktmeddelanden</h2>
-          {messages.length === 0 ? (
-            <div className="text-center py-12 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
-              <MessageSquare size={40} className="text-zinc-300 dark:text-zinc-600 mx-auto mb-3" />
-              <p className="text-zinc-500 dark:text-zinc-400">Inga meddelanden ännu.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`p-6 bg-white dark:bg-zinc-900 rounded-xl border transition-colors ${
-                    msg.read
-                      ? 'border-zinc-200 dark:border-zinc-800'
-                      : 'border-wmb-blue/30 dark:border-wmb-blue-dark'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-4 mb-3">
-                    <div>
-                      <p className="font-semibold text-zinc-900 dark:text-white">{msg.name}</p>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">{msg.email} {msg.phone && `• ${msg.phone}`}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-xs text-zinc-400">
-                        {new Date(msg.created_at).toLocaleDateString('sv-SE')}
-                      </span>
-                      <button
-                        onClick={() => toggleMessageRead(msg.id, msg.read)}
-                        className="p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
-                        title={msg.read ? 'Markera som oläst' : 'Markera som läst'}
-                      >
-                        {msg.read ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                      <button
-                        onClick={() => deleteMessage(msg.id)}
-                        className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 rounded-lg transition-colors"
-                        title="Ta bort"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                  <p className="text-zinc-600 dark:text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap">{msg.message}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
       {activeTab === 'clients' && (
-        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-8 text-center">
-          <Users size={40} className="text-zinc-300 dark:text-zinc-600 mx-auto mb-3" />
-          <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Kundhantering</h2>
-          <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-6">
-            Lägg till kunder och deras logotyper som visas på hemsidan.
-          </p>
-          <p className="text-xs text-zinc-400">Koppla Supabase för att aktivera denna funktion.</p>
-        </div>
+        <ClientsTab clients={clients} setClients={setClients} onReload={loadData} />
       )}
-
-      {activeTab === 'content' && (
-        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-8 text-center">
-          <FileText size={40} className="text-zinc-300 dark:text-zinc-600 mx-auto mb-3" />
-          <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Innehållsredigering</h2>
-          <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-6">
-            Redigera texter på hemsidan som beskrivningar, kontaktinformation och statistik.
-          </p>
-          <p className="text-xs text-zinc-400">Koppla Supabase för att aktivera denna funktion.</p>
-        </div>
+      {activeTab === 'settings' && (
+        <SettingsTab siteContent={siteContent} onReload={loadData} />
       )}
     </div>
   )
 }
 
+/* ==================== OVERVIEW ==================== */
+function OverviewTab({ projects, clients }: { projects: Project[]; clients: ClientType[] }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {[
+        { label: 'Projekt', value: projects.length, icon: FolderOpen },
+        { label: 'Kunder', value: clients.length, icon: Users },
+        { label: 'Status', value: 'Aktiv', icon: LayoutDashboard },
+      ].map((stat) => (
+        <div key={stat.label} className="p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center gap-3 mb-2">
+            <stat.icon size={20} className="text-wmb-blue" />
+            <span className="text-sm text-zinc-500 dark:text-zinc-400">{stat.label}</span>
+          </div>
+          <p className="text-2xl font-bold text-zinc-900 dark:text-white">{stat.value}</p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/* ==================== PROJECTS ==================== */
 function ProjectsTab({
   projects,
-  onDelete,
+  setProjects,
   onReload,
 }: {
   projects: Project[]
-  onDelete: (id: string) => void
+  setProjects: (p: Project[]) => void
   onReload: () => void
 }) {
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [form, setForm] = useState({
     title: '',
     description: '',
     category: '',
     client: '',
     featured: false,
+    images: [] as string[],
   })
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+    setUploading(true)
+    try {
+      const urls = await Promise.all(files.map((f) => uploadImage(f, 'wmb/projects')))
+      setForm((prev) => ({ ...prev, images: [...prev.images, ...urls] }))
+    } catch (err) {
+      alert('Kunde inte ladda upp bilden. Försök igen.')
+    }
+    setUploading(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const removeImage = (index: number) => {
+    setForm((prev) => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }))
+  }
 
   const handleSave = async () => {
     if (!form.title || !form.description) return
     setSaving(true)
-
     await supabase.from('projects').insert([{
       title: form.title,
       description: form.description,
       category: form.category,
       client: form.client,
-      images: [],
+      images: form.images,
       featured: form.featured,
     }])
-
-    setForm({ title: '', description: '', category: '', client: '', featured: false })
+    setForm({ title: '', description: '', category: '', client: '', featured: false, images: [] })
     setShowForm(false)
     setSaving(false)
     onReload()
+  }
+
+  const deleteProject = async (id: string) => {
+    if (!confirm('Är du säker på att du vill ta bort detta projekt?')) return
+    await supabase.from('projects').delete().eq('id', id)
+    setProjects(projects.filter((p) => p.id !== id))
   }
 
   return (
@@ -317,7 +225,6 @@ function ProjectsTab({
         </button>
       </div>
 
-      {/* New project form */}
       {showForm && (
         <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -366,6 +273,56 @@ function ProjectsTab({
               placeholder="Beskriv projektet..."
             />
           </div>
+
+          {/* Image upload */}
+          <div>
+            <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-1">Bilder</label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+              id="project-images"
+            />
+            <label
+              htmlFor="project-images"
+              className={`inline-flex items-center gap-2 px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg text-sm cursor-pointer transition-colors ${
+                uploading ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400' : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700'
+              }`}
+            >
+              {uploading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-zinc-300 border-t-zinc-600 rounded-full animate-spin" />
+                  Laddar upp...
+                </>
+              ) : (
+                <>
+                  <Upload size={16} />
+                  Ladda upp bilder
+                </>
+              )}
+            </label>
+
+            {form.images.length > 0 && (
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-3">
+                {form.images.map((url, i) => (
+                  <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700">
+                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(i)}
+                      className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -378,6 +335,7 @@ function ProjectsTab({
               Visa på startsidan
             </label>
           </div>
+
           <button
             onClick={handleSave}
             disabled={saving || !form.title || !form.description}
@@ -389,7 +347,6 @@ function ProjectsTab({
         </div>
       )}
 
-      {/* Projects list */}
       {projects.length === 0 ? (
         <div className="text-center py-12 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
           <ImageIcon size={40} className="text-zinc-300 dark:text-zinc-600 mx-auto mb-3" />
@@ -398,30 +355,285 @@ function ProjectsTab({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {projects.map((project) => (
-            <div
-              key={project.id}
-              className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-5"
-            >
-              <div className="flex items-start justify-between gap-2 mb-3">
-                <div>
-                  <h3 className="font-semibold text-zinc-900 dark:text-white text-sm">{project.title}</h3>
-                  <p className="text-xs text-wmb-blue">{project.category}</p>
+            <div key={project.id} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+              {project.images.length > 0 ? (
+                <img src={project.images[0]} alt={project.title} className="w-full h-40 object-cover" />
+              ) : (
+                <div className="w-full h-40 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                  <ImageIcon size={32} className="text-zinc-300 dark:text-zinc-600" />
                 </div>
-                <button
-                  onClick={() => onDelete(project.id)}
-                  className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 rounded-lg transition-colors shrink-0"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-              <p className="text-zinc-600 dark:text-zinc-400 text-xs leading-relaxed">{project.description}</p>
-              {project.client && (
-                <p className="text-xs text-zinc-400 mt-2">Kund: {project.client}</p>
               )}
+              <div className="p-5">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div>
+                    <h3 className="font-semibold text-zinc-900 dark:text-white text-sm">{project.title}</h3>
+                    {project.category && <p className="text-xs text-wmb-blue">{project.category}</p>}
+                  </div>
+                  <button
+                    onClick={() => deleteProject(project.id)}
+                    className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 rounded-lg transition-colors shrink-0"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+                <p className="text-zinc-600 dark:text-zinc-400 text-xs leading-relaxed line-clamp-2">{project.description}</p>
+                {project.client && <p className="text-xs text-zinc-400 mt-2">Kund: {project.client}</p>}
+                {project.images.length > 1 && (
+                  <p className="text-xs text-zinc-400 mt-1">{project.images.length} bilder</p>
+                )}
+              </div>
             </div>
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+/* ==================== CLIENTS ==================== */
+function ClientsTab({
+  clients,
+  setClients,
+  onReload,
+}: {
+  clients: ClientType[]
+  setClients: (c: ClientType[]) => void
+  onReload: () => void
+}) {
+  const [showForm, setShowForm] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [form, setForm] = useState({ name: '', logo: '', description: '' })
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadImage(file, 'wmb/clients')
+      setForm((prev) => ({ ...prev, logo: url }))
+    } catch {
+      alert('Kunde inte ladda upp logotypen.')
+    }
+    setUploading(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleSave = async () => {
+    if (!form.name) return
+    setSaving(true)
+    await supabase.from('clients').insert([{
+      name: form.name,
+      logo: form.logo,
+      description: form.description,
+    }])
+    setForm({ name: '', logo: '', description: '' })
+    setShowForm(false)
+    setSaving(false)
+    onReload()
+  }
+
+  const deleteClient = async (id: string) => {
+    if (!confirm('Är du säker på att du vill ta bort denna kund?')) return
+    await supabase.from('clients').delete().eq('id', id)
+    setClients(clients.filter((c) => c.id !== id))
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Kunder</h2>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-wmb-red hover:bg-wmb-red/90 text-white text-sm font-medium rounded-lg transition-colors"
+        >
+          {showForm ? <X size={18} /> : <Plus size={18} />}
+          {showForm ? 'Avbryt' : 'Ny kund'}
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-1">Kundnamn *</label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-wmb-blue"
+              placeholder="Företagets namn"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-1">Beskrivning</label>
+            <input
+              type="text"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-wmb-blue"
+              placeholder="Kort beskrivning (valfritt)"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-1">Logotyp</label>
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" id="client-logo" />
+            {form.logo ? (
+              <div className="flex items-center gap-4">
+                <img src={form.logo} alt="" className="w-16 h-16 object-contain rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white p-1" />
+                <button onClick={() => setForm({ ...form, logo: '' })} className="text-sm text-red-500 hover:text-red-600">Ta bort</button>
+              </div>
+            ) : (
+              <label
+                htmlFor="client-logo"
+                className={`inline-flex items-center gap-2 px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg text-sm cursor-pointer transition-colors ${
+                  uploading ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400' : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700'
+                }`}
+              >
+                {uploading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-zinc-300 border-t-zinc-600 rounded-full animate-spin" />
+                    Laddar upp...
+                  </>
+                ) : (
+                  <>
+                    <Upload size={16} />
+                    Ladda upp logotyp
+                  </>
+                )}
+              </label>
+            )}
+          </div>
+
+          <button
+            onClick={handleSave}
+            disabled={saving || !form.name}
+            className="inline-flex items-center gap-2 px-6 py-2 bg-wmb-red hover:bg-wmb-red/90 disabled:bg-wmb-red/50 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            <Save size={16} />
+            {saving ? 'Sparar...' : 'Spara kund'}
+          </button>
+        </div>
+      )}
+
+      {clients.length === 0 ? (
+        <div className="text-center py-12 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
+          <Users size={40} className="text-zinc-300 dark:text-zinc-600 mx-auto mb-3" />
+          <p className="text-zinc-500 dark:text-zinc-400">Inga kunder ännu. Lägg till din första kund ovan.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {clients.map((client) => (
+            <div key={client.id} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-5">
+              <div className="flex items-start gap-4">
+                {client.logo ? (
+                  <img src={client.logo} alt={client.name} className="w-14 h-14 object-contain rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white p-1 shrink-0" />
+                ) : (
+                  <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-800 rounded-lg flex items-center justify-center shrink-0">
+                    <Users size={20} className="text-zinc-400" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-semibold text-zinc-900 dark:text-white text-sm">{client.name}</h3>
+                    <button
+                      onClick={() => deleteClient(client.id)}
+                      className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 rounded-lg transition-colors shrink-0"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                  {client.description && (
+                    <p className="text-zinc-500 dark:text-zinc-400 text-xs mt-1">{client.description}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ==================== SETTINGS ==================== */
+const SETTINGS_FIELDS = [
+  { section: 'contact', key: 'phone', label: 'Telefonnummer', placeholder: '070-123 45 67' },
+  { section: 'contact', key: 'email', label: 'E-postadress', placeholder: 'info@wahlstromsmaleri.se' },
+  { section: 'contact', key: 'address', label: 'Adress', placeholder: 'Exempelgatan 1, 123 45 Stockholm' },
+  { section: 'contact', key: 'hours', label: 'Öppettider', placeholder: 'Mån–Fre: 07:00–17:00' },
+]
+
+function SettingsTab({ siteContent, onReload }: { siteContent: SiteContent[]; onReload: () => void }) {
+  const [values, setValues] = useState<Record<string, string>>({})
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    const initial: Record<string, string> = {}
+    for (const field of SETTINGS_FIELDS) {
+      const existing = siteContent.find((c) => c.section === field.section && c.key === field.key)
+      initial[`${field.section}.${field.key}`] = existing?.value || ''
+    }
+    setValues(initial)
+  }, [siteContent])
+
+  const handleSave = async () => {
+    setSaving(true)
+    for (const field of SETTINGS_FIELDS) {
+      const val = values[`${field.section}.${field.key}`] || ''
+      if (!val) continue
+      const existing = siteContent.find((c) => c.section === field.section && c.key === field.key)
+      if (existing) {
+        await supabase.from('site_content').update({ value: val }).eq('id', existing.id)
+      } else {
+        await supabase.from('site_content').insert([{ section: field.section, key: field.key, value: val }])
+      }
+    }
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
+    onReload()
+  }
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Inställningar</h2>
+
+      <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 space-y-5">
+        <h3 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
+          <Pencil size={16} className="text-wmb-blue" />
+          Kontaktuppgifter
+        </h3>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">Dessa visas på kontaktsidan och i footern.</p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {SETTINGS_FIELDS.map((field) => (
+            <div key={`${field.section}.${field.key}`}>
+              <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-1">{field.label}</label>
+              <input
+                type="text"
+                value={values[`${field.section}.${field.key}`] || ''}
+                onChange={(e) => setValues({ ...values, [`${field.section}.${field.key}`]: e.target.value })}
+                className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-wmb-blue"
+                placeholder={field.placeholder}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="inline-flex items-center gap-2 px-6 py-2 bg-wmb-red hover:bg-wmb-red/90 disabled:bg-wmb-red/50 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            <Save size={16} />
+            {saving ? 'Sparar...' : 'Spara inställningar'}
+          </button>
+          {saved && <span className="text-green-500 text-sm">Sparat!</span>}
+        </div>
+      </div>
     </div>
   )
 }

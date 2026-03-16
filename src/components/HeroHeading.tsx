@@ -9,7 +9,7 @@ export default function HeroHeading() {
       <RotatingText
         texts={['precision i varje drag', 'passion i varje detalj', 'kvalitet i varje lager', 'perfektion i varje yta']}
         mainClassName="bg-wmb-blue text-white px-2 min-w-full"
-        rotationInterval={2500}
+        rotationInterval={5000}
         staggerDuration={0.03}
         staggerFrom="first"
       />

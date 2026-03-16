@@ -2,32 +2,58 @@
 
 import { useState, useRef } from 'react'
 import { Phone, Mail, MapPin, Clock, Send, CheckCircle, Paperclip, X } from 'lucide-react'
+import { validateEmail, validateMobile, validateLandline } from '@/lib/validation'
 
 const MAX_FILES = 5
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 
 export default function KontaktPage() {
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
-    phone: '',
+    mobile: '',
+    landline: '',
     service: '',
     message: '',
   })
   const [files, setFiles] = useState<File[]>([])
   const [fileError, setFileError] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const validate = (): Record<string, string> => {
+    const errs: Record<string, string> = {}
+    if (!formData.firstName.trim()) errs.firstName = 'Förnamn krävs'
+    if (!formData.lastName.trim()) errs.lastName = 'Efternamn krävs'
+    if (!formData.email.trim()) errs.email = 'E-post krävs'
+    else if (!validateEmail(formData.email)) errs.email = 'Ogiltig e-postadress'
+    if (!formData.mobile.trim() && !formData.landline.trim()) {
+      errs.mobile = 'Minst ett telefonnummer krävs'
+    } else {
+      if (formData.mobile.trim() && !validateMobile(formData.mobile)) errs.mobile = 'Ogiltigt mobilnummer (07X-XXX XX XX)'
+      if (formData.landline.trim() && !validateLandline(formData.landline)) errs.landline = 'Ogiltigt telefonnummer'
+    }
+    if (!formData.message.trim()) errs.message = 'Meddelande krävs'
+    return errs
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const errs = validate()
+    setErrors(errs)
+    if (Object.keys(errs).length > 0) return
+
     setStatus('loading')
 
     try {
       const body = new FormData()
-      body.append('name', formData.name)
+      body.append('firstName', formData.firstName)
+      body.append('lastName', formData.lastName)
       body.append('email', formData.email)
-      body.append('phone', formData.phone)
+      body.append('mobile', formData.mobile)
+      body.append('landline', formData.landline)
       body.append('service', formData.service)
       body.append('message', formData.message)
       files.forEach((file) => body.append('files', file))
@@ -39,8 +65,9 @@ export default function KontaktPage() {
 
       if (res.ok) {
         setStatus('success')
-        setFormData({ name: '', email: '', phone: '', service: '', message: '' })
+        setFormData({ firstName: '', lastName: '', email: '', mobile: '', landline: '', service: '', message: '' })
         setFiles([])
+        setErrors({})
       } else {
         setStatus('error')
       }
@@ -50,7 +77,9 @@ export default function KontaktPage() {
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    if (errors[name]) setErrors((prev) => { const next = { ...prev }; delete next[name]; return next })
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,6 +99,11 @@ export default function KontaktPage() {
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
   }
+
+  const inputClass = (field: string) =>
+    `w-full px-4 py-3 bg-white dark:bg-zinc-800 border rounded-xl text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-wmb-blue focus:border-transparent transition-all ${
+      errors[field] ? 'border-red-400' : 'border-zinc-300 dark:border-zinc-700'
+    }`
 
   return (
     <>
@@ -161,110 +195,63 @@ export default function KontaktPage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">
-                        Namn *
-                      </label>
-                      <input
-                        type="text"
-                        id="name"
-                        name="name"
-                        required
-                        value={formData.name}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-wmb-blue focus:border-transparent transition-all"
-                        placeholder="Ditt namn"
-                      />
+                      <label htmlFor="firstName" className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">Förnamn *</label>
+                      <input type="text" id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} className={inputClass('firstName')} placeholder="Förnamn" />
+                      {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
                     </div>
                     <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">
-                        E-post *
-                      </label>
-                      <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        required
-                        value={formData.email}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-wmb-blue focus:border-transparent transition-all"
-                        placeholder="din@epost.se"
-                      />
+                      <label htmlFor="lastName" className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">Efternamn *</label>
+                      <input type="text" id="lastName" name="lastName" value={formData.lastName} onChange={handleChange} className={inputClass('lastName')} placeholder="Efternamn" />
+                      {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
                     </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">E-post *</label>
+                    <input type="text" id="email" name="email" value={formData.email} onChange={handleChange} className={inputClass('email')} placeholder="din@epost.se" />
+                    {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
-                      <label htmlFor="phone" className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">
-                        Telefon
-                      </label>
-                      <input
-                        type="tel"
-                        id="phone"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-wmb-blue focus:border-transparent transition-all"
-                        placeholder="070-123 45 67"
-                      />
+                      <label htmlFor="mobile" className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">Mobil</label>
+                      <input type="tel" id="mobile" name="mobile" value={formData.mobile} onChange={handleChange} className={inputClass('mobile')} placeholder="07X-XXX XX XX" />
+                      {errors.mobile && <p className="text-red-500 text-xs mt-1">{errors.mobile}</p>}
                     </div>
                     <div>
-                      <label htmlFor="service" className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">
-                        Tjänst
-                      </label>
-                      <select
-                        id="service"
-                        name="service"
-                        value={formData.service}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-wmb-blue focus:border-transparent transition-all"
-                      >
-                        <option value="">Välj tjänst</option>
-                        <option value="Invändig målning">Invändig målning</option>
-                        <option value="Utvändig målning">Utvändig målning</option>
-                        <option value="Spackling">Spackling</option>
-                        <option value="Tapetsering">Tapetsering</option>
-                        <option value="Fasadrenovering">Fasadrenovering</option>
-                        <option value="Byggtjänster">Byggtjänster</option>
-                        <option value="Lackering">Lackering</option>
-                        <option value="Annat">Annat</option>
-                      </select>
+                      <label htmlFor="landline" className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">Telefon</label>
+                      <input type="tel" id="landline" name="landline" value={formData.landline} onChange={handleChange} className={inputClass('landline')} placeholder="08-XXX XXX" />
+                      {errors.landline && <p className="text-red-500 text-xs mt-1">{errors.landline}</p>}
                     </div>
+                  </div>
+                  <p className="text-zinc-500 dark:text-zinc-400 text-xs -mt-4">Minst ett telefonnummer krävs</p>
+
+                  <div>
+                    <label htmlFor="service" className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">Tjänst</label>
+                    <select id="service" name="service" value={formData.service} onChange={handleChange} className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-wmb-blue focus:border-transparent transition-all">
+                      <option value="">Välj tjänst</option>
+                      <option value="Invändig målning">Invändig målning</option>
+                      <option value="Utvändig målning">Utvändig målning</option>
+                      <option value="Spackling">Spackling</option>
+                      <option value="Tapetsering">Tapetsering</option>
+                      <option value="Fasadrenovering">Fasadrenovering</option>
+                      <option value="Byggtjänster">Byggtjänster</option>
+                      <option value="Lackering">Lackering</option>
+                      <option value="Annat">Annat</option>
+                    </select>
                   </div>
 
                   <div>
-                    <label htmlFor="message" className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">
-                      Meddelande *
-                    </label>
-                    <textarea
-                      id="message"
-                      name="message"
-                      required
-                      rows={6}
-                      value={formData.message}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-wmb-blue focus:border-transparent transition-all resize-none"
-                      placeholder="Berätta om ditt projekt..."
-                    />
+                    <label htmlFor="message" className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">Meddelande *</label>
+                    <textarea id="message" name="message" rows={6} value={formData.message} onChange={handleChange} className={inputClass('message') + ' resize-none'} placeholder="Berätta om ditt projekt..." />
+                    {errors.message && <p className="text-red-500 text-xs mt-1">{errors.message}</p>}
                   </div>
 
                   {/* File upload */}
                   <div>
-                    <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">
-                      Bifoga filer
-                    </label>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      multiple
-                      accept="image/*,.pdf,.doc,.docx"
-                      onChange={handleFileChange}
-                      className="hidden"
-                      id="kontakt-file-upload"
-                    />
-                    <label
-                      htmlFor="kontakt-file-upload"
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-600 dark:text-zinc-300 text-sm cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
-                    >
+                    <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">Bifoga filer</label>
+                    <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf,.doc,.docx" onChange={handleFileChange} className="hidden" id="kontakt-file-upload" />
+                    <label htmlFor="kontakt-file-upload" className="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-600 dark:text-zinc-300 text-sm cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
                       <Paperclip size={16} />
                       Välj filer
                     </label>
@@ -279,11 +266,7 @@ export default function KontaktPage() {
                             <Paperclip size={14} className="shrink-0 text-zinc-400" />
                             <span className="truncate">{file.name}</span>
                             <span className="text-zinc-400 shrink-0 text-xs">({formatSize(file.size)})</span>
-                            <button
-                              type="button"
-                              onClick={() => removeFile(i)}
-                              className="ml-auto shrink-0 p-1 hover:text-red-500 transition-colors"
-                            >
+                            <button type="button" onClick={() => removeFile(i)} className="ml-auto shrink-0 p-1 hover:text-red-500 transition-colors">
                               <X size={16} />
                             </button>
                           </div>
@@ -298,11 +281,7 @@ export default function KontaktPage() {
                     </div>
                   )}
 
-                  <button
-                    type="submit"
-                    disabled={status === 'loading'}
-                    className="inline-flex items-center gap-2 px-8 py-4 bg-wmb-red hover:bg-wmb-red/90 disabled:bg-wmb-red/50 text-white font-semibold rounded-xl transition-all hover:scale-105 disabled:hover:scale-100"
-                  >
+                  <button type="submit" disabled={status === 'loading'} className="inline-flex items-center gap-2 px-8 py-4 bg-wmb-red hover:bg-wmb-red/90 disabled:bg-wmb-red/50 text-white font-semibold rounded-xl transition-all hover:scale-105 disabled:hover:scale-100">
                     {status === 'loading' ? (
                       <>
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
