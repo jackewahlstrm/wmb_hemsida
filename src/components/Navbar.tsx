@@ -25,11 +25,19 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center group">
             <Image
-              src="/wmb_logga_copy.png"
+              src="/wmb_logo_real.webp"
               alt="Wahlströms Måleri & Bygg"
               width={220}
               height={72}
-              className="h-14 sm:h-18 w-auto dark:brightness-0 dark:invert"
+              className="h-14 sm:h-18 w-auto dark:hidden"
+              priority
+            />
+            <Image
+              src="/wmb_logo_dark.webp"
+              alt="Wahlströms Måleri & Bygg"
+              width={220}
+              height={72}
+              className="h-14 sm:h-18 w-auto hidden dark:block"
               priority
             />
           </Link>

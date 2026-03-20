@@ -13,11 +13,18 @@ export default function Footer() {
           <div className="lg:col-span-1">
             <div className="mb-4">
               <Image
-                src="/wmb_logga_copy.png"
+                src="/wmb_logo_real.webp"
                 alt="Wahlströms Måleri & Bygg"
                 width={200}
                 height={70}
-                className="h-16 w-auto brightness-0 invert"
+                className="h-16 w-auto dark:hidden"
+              />
+              <Image
+                src="/wmb_logo_dark.webp"
+                alt="Wahlströms Måleri & Bygg"
+                width={200}
+                height={70}
+                className="h-16 w-auto hidden dark:block"
               />
             </div>
             <p className="text-sm text-zinc-400 leading-relaxed">
