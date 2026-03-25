@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Send, CheckCircle, Paperclip, X } from 'lucide-react'
 import { validateEmail, validateMobile, validateLandline } from '@/lib/validation'
+import Skeleton from '@mui/material/Skeleton'
 
 const MAX_FILES = 5
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB per fil
@@ -22,6 +23,12 @@ export default function HeroContactForm() {
   const [fileError, setFileError] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [skeletonLoading, setSkeletonLoading] = useState(true)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSkeletonLoading(false), 0)
+    return () => clearTimeout(timer)
+  }, [])
 
   const validate = (): Record<string, string> => {
     const errs: Record<string, string> = {}
@@ -117,6 +124,27 @@ export default function HeroContactForm() {
     `w-full px-4 py-2.5 bg-white/10 border rounded-lg text-white placeholder-zinc-400 text-sm focus:outline-none focus:ring-2 focus:ring-wmb-blue focus:border-transparent transition-all ${
       errors[field] ? 'border-red-400' : 'border-white/20'
     }`
+
+  if (skeletonLoading) {
+    return (
+      <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 sm:p-8 space-y-4">
+        <Skeleton variant="text" width={140} height={28} sx={{ bgcolor: 'rgba(255,255,255,0.1)' }} />
+        <Skeleton variant="text" width={220} height={18} sx={{ bgcolor: 'rgba(255,255,255,0.1)' }} />
+        <div className="grid grid-cols-2 gap-3">
+          <Skeleton variant="rounded" height={40} sx={{ bgcolor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }} />
+          <Skeleton variant="rounded" height={40} sx={{ bgcolor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }} />
+        </div>
+        <Skeleton variant="rounded" height={40} sx={{ bgcolor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }} />
+        <div className="grid grid-cols-2 gap-3">
+          <Skeleton variant="rounded" height={40} sx={{ bgcolor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }} />
+          <Skeleton variant="rounded" height={40} sx={{ bgcolor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }} />
+        </div>
+        <Skeleton variant="rounded" height={40} sx={{ bgcolor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }} />
+        <Skeleton variant="rounded" height={80} sx={{ bgcolor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }} />
+        <Skeleton variant="rounded" height={44} sx={{ bgcolor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }} />
+      </div>
+    )
+  }
 
   if (status === 'success') {
     return (

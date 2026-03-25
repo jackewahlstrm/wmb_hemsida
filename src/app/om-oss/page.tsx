@@ -1,4 +1,8 @@
+'use client'
+
 import { Award, Clock, Heart, Target } from 'lucide-react'
+import WithSkeleton from '@/components/WithSkeleton'
+import { AboutSkeleton } from '@/components/PageSkeleton'
 
 const values = [
   {
@@ -25,7 +29,7 @@ const values = [
 
 export default function OmOssPage() {
   return (
-    <>
+    <WithSkeleton skeleton={<AboutSkeleton />}>
       {/* Hero */}
       <section className="py-20 sm:py-28 bg-zinc-50 dark:bg-zinc-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -103,12 +107,9 @@ export default function OmOssPage() {
               </div>
             </div>
 
-            {/* CEO Image placeholder */}
-            <div className="order-1 lg:order-2 h-96 bg-zinc-200 dark:bg-zinc-800 rounded-2xl relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-wmb-red/20 to-transparent" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-zinc-400 dark:text-zinc-600 text-sm">Bild på VD</span>
-              </div>
+            {/* CEO Image */}
+            <div className="order-1 lg:order-2 h-96 rounded-2xl relative overflow-hidden">
+              <img src="/tomas_wmb.webp" alt="Tomas Wahlström" className="w-full h-full object-cover rounded-2xl" />
             </div>
           </div>
         </div>
@@ -158,6 +159,6 @@ export default function OmOssPage() {
           </div>
         </div>
       </section>
-    </>
+    </WithSkeleton>
   )
 }

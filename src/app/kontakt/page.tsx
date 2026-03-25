@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Phone, Mail, MapPin, Clock, Send, CheckCircle, Paperclip, X } from 'lucide-react'
+import WithSkeleton from '@/components/WithSkeleton'
+import { ContactSkeleton } from '@/components/PageSkeleton'
+import { Phone, Mail, MapPin, Send, CheckCircle, Paperclip, X } from 'lucide-react'
 import { validateEmail, validateMobile, validateLandline } from '@/lib/validation'
 
 const MAX_FILES = 5
@@ -106,7 +108,8 @@ export default function KontaktPage() {
     }`
 
   return (
-    <>
+    <WithSkeleton skeleton={<ContactSkeleton />}>
+      <div>
       {/* Hero */}
       <section className="py-20 sm:py-28 bg-zinc-50 dark:bg-zinc-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -136,8 +139,8 @@ export default function KontaktPage() {
                     </div>
                     <div>
                       <p className="font-medium text-zinc-900 dark:text-white text-sm">Telefon</p>
-                      <a href="tel:+46701234567" className="text-zinc-600 dark:text-zinc-400 hover:text-wmb-red transition-colors">
-                        070-123 45 67
+                      <a href="tel:+46707358181" className="text-zinc-600 dark:text-zinc-400 hover:text-wmb-red transition-colors">
+                        0707358181
                       </a>
                     </div>
                   </div>
@@ -148,8 +151,8 @@ export default function KontaktPage() {
                     </div>
                     <div>
                       <p className="font-medium text-zinc-900 dark:text-white text-sm">E-post</p>
-                      <a href="mailto:info@wahlstromsmaleri.se" className="text-zinc-600 dark:text-zinc-400 hover:text-wmb-red transition-colors">
-                        info@wahlstromsmaleri.se
+                      <a href="mailto:Tomas.wmb@telia.com" className="text-zinc-600 dark:text-zinc-400 hover:text-wmb-red transition-colors">
+                        Tomas.wmb@telia.com
                       </a>
                     </div>
                   </div>
@@ -161,16 +164,6 @@ export default function KontaktPage() {
                     <div>
                       <p className="font-medium text-zinc-900 dark:text-white text-sm">Adress</p>
                       <p className="text-zinc-600 dark:text-zinc-400">Stockholm, Sverige</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-wmb-blue/10 dark:bg-wmb-blue-dark/30 text-wmb-blue rounded-lg flex items-center justify-center shrink-0">
-                      <Clock size={20} />
-                    </div>
-                    <div>
-                      <p className="font-medium text-zinc-900 dark:text-white text-sm">Öppettider</p>
-                      <p className="text-zinc-600 dark:text-zinc-400">Mån–Fre: 07:00–17:00</p>
                     </div>
                   </div>
                 </div>
@@ -300,6 +293,7 @@ export default function KontaktPage() {
           </div>
         </div>
       </section>
-    </>
+      </div>
+    </WithSkeleton>
   )
 }

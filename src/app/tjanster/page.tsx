@@ -1,6 +1,8 @@
+'use client'
+
 import { Paintbrush, Home, Building2, Layers, Wallpaper, Hammer, SprayCan, Ruler, Wrench } from 'lucide-react'
-import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
+import WithSkeleton from '@/components/WithSkeleton'
+import { ServicesSkeleton } from '@/components/PageSkeleton'
 
 const services = [
   {
@@ -59,9 +61,53 @@ const services = [
   },
 ]
 
-export default function TjansterPage() {
+function ServiceCard({ service, large = false }: { service: typeof services[number]; large?: boolean }) {
   return (
-    <>
+    <div
+      className={`group p-8 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 hover:shadow-xl hover:shadow-zinc-200/50 dark:hover:shadow-zinc-900/50 transition-all duration-300 hover:-translate-y-1 ${
+        large ? 'flex flex-col sm:flex-row sm:items-center gap-8' : ''
+      }`}
+    >
+      <div className={`shrink-0 ${large ? 'sm:pl-4' : ''}`}>
+        <div className={`${large ? 'w-20 h-20' : 'w-14 h-14'} bg-wmb-blue/10 dark:bg-wmb-blue-dark/30 text-wmb-blue rounded-xl flex items-center justify-center mb-6 ${large ? 'sm:mb-0' : ''} group-hover:scale-110 transition-transform`}>
+          <service.icon size={large ? 36 : 28} />
+        </div>
+      </div>
+
+      <div className="flex-1">
+        <h3 className={`${large ? 'text-2xl' : 'text-xl'} font-bold text-zinc-900 dark:text-white mb-2 group-hover:text-wmb-red transition-colors`}>
+          {service.title}
+        </h3>
+        <p className={`text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4 ${large ? 'text-base' : 'text-sm'}`}>
+          {service.description}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {service.features.map((feature) => (
+            <span
+              key={feature}
+              className="px-3 py-1 text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-full"
+            >
+              {feature}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function TjansterPage() {
+  const rows: { large: typeof services[number]; small: typeof services[number][] }[] = []
+  let i = 0
+  while (i < services.length) {
+    const large = services[i]
+    const small = services.slice(i + 1, i + 3)
+    rows.push({ large, small })
+    i += 1 + small.length
+  }
+
+  return (
+    <WithSkeleton skeleton={<ServicesSkeleton />}>
       {/* Hero */}
       <section className="py-20 sm:py-28 bg-zinc-50 dark:bg-zinc-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -76,52 +122,24 @@ export default function TjansterPage() {
         </div>
       </section>
 
-      {/* Services Grid */}
+      {/* Services Alternating */}
       <section className="py-20 sm:py-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((service) => (
-              <div
-                key={service.title}
-                className="group p-8 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 hover:shadow-xl hover:shadow-zinc-200/50 dark:hover:shadow-zinc-900/50 transition-all duration-300 hover:-translate-y-1"
-              >
-                <div className="w-14 h-14 bg-wmb-blue/10 dark:bg-wmb-blue-dark/30 text-wmb-blue rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <service.icon size={28} />
-                </div>
-                <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-3">{service.title}</h3>
-                <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed mb-5">{service.description}</p>
-                <ul className="space-y-2">
-                  {service.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-                      <div className="w-1.5 h-1.5 bg-wmb-red rounded-full shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          {rows.map((row, idx) => (
+            <div key={idx} className={`grid grid-cols-1 lg:grid-cols-2 gap-8 ${idx % 2 === 1 ? 'lg:direction-rtl' : ''}`}>
+              {/* Stor tjänst */}
+              <ServiceCard service={row.large} large />
 
-      {/* CTA */}
-      <section className="py-20 sm:py-28 bg-zinc-50 dark:bg-zinc-900/50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white mb-6">
-            Behöver du hjälp med ett projekt?
-          </h2>
-          <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-10">
-            Kontakta oss för en kostnadsfri offert. Vi anpassar våra tjänster efter dina behov.
-          </p>
-          <Link
-            href="/kontakt"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-wmb-red hover:bg-wmb-red/90 text-white font-semibold rounded-xl transition-all hover:scale-105"
-          >
-            Begär offert
-            <ArrowRight size={18} />
-          </Link>
+              {/* Två små tjänster staplade */}
+              <div className="grid grid-cols-1 gap-8">
+                {row.small.map((service) => (
+                  <ServiceCard key={service.title} service={service} />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
-    </>
+    </WithSkeleton>
   )
 }

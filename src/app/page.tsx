@@ -1,7 +1,10 @@
+'use client'
+
 import Link from 'next/link'
 import { ArrowRight, Star, Users, Briefcase, Shield } from 'lucide-react'
-import HeroContactForm from '@/components/HeroContactForm'
 import HeroHeading from '@/components/HeroHeading'
+import HeroSlideshow from '@/components/HeroSlideshow'
+import ProjectParallax from '@/components/ProjectParallax'
 
 const stats = [
   { icon: Briefcase, value: '500+', label: 'Genomförda projekt' },
@@ -29,11 +32,9 @@ export default function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden">
-        {/* Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900">
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/80 via-transparent to-zinc-900/40" />
-        </div>
+      <section className="relative min-h-screen flex items-center overflow-hidden">
+        {/* Slideshow bakgrund */}
+        <HeroSlideshow />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 w-full">
           {/* Stats row */}
@@ -49,28 +50,31 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            {/* Left side - Text */}
+          <div className="text-center flex flex-col items-center">
             <div>
               <HeroHeading />
 
-              <p className="text-lg text-zinc-300 mb-8 leading-relaxed max-w-lg">
+              <p className="text-lg text-zinc-300 mb-8 leading-relaxed max-w-lg mx-auto">
                 Wahlströms Måleri & Bygg levererar förstklassigt hantverk till privata hem
                 och kommersiella fastigheter i hela Stockholmsområdet.
               </p>
 
-              <Link
-                href="/projekt"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border border-white/20 transition-all"
-              >
-                Se våra projekt
-                <ArrowRight size={18} />
-              </Link>
-            </div>
-
-            {/* Right side - Contact Form */}
-            <div>
-              <HeroContactForm />
+              <div className="flex flex-wrap gap-4 justify-center">
+                <Link
+                  href="/projekt"
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border border-white/20 transition-all"
+                >
+                  Se våra projekt
+                  <ArrowRight size={18} />
+                </Link>
+                <Link
+                  href="/kontakt"
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-wmb-red hover:bg-wmb-red/90 text-white font-semibold rounded-xl transition-all"
+                >
+                  Begär offert
+                  <ArrowRight size={18} />
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -82,6 +86,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Project Parallax */}
+      <ProjectParallax />
 
       {/* Services Preview */}
       <section className="py-20 sm:py-28">
@@ -122,26 +129,6 @@ export default function Home() {
               <ArrowRight size={18} />
             </Link>
           </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 sm:py-28 bg-wmb-red">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
-            Redo att starta ditt projekt?
-          </h2>
-          <p className="text-lg text-red-100 mb-10 max-w-2xl mx-auto">
-            Kontakta oss idag för en kostnadsfri offert. Vi hjälper dig gärna med allt
-            från små uppdrag till stora renoveringsprojekt.
-          </p>
-          <Link
-            href="/kontakt"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-wmb-red font-semibold rounded-xl hover:bg-zinc-100 transition-all hover:scale-105"
-          >
-            Kontakta oss
-            <ArrowRight size={18} />
-          </Link>
         </div>
       </section>
     </>
