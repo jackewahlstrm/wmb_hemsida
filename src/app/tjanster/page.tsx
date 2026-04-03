@@ -29,12 +29,7 @@ const services = [
     description: 'Professionell tapetsering med precision och noggrannhet. Vi hjälper dig välja rätt tapet för ditt rum.',
     features: ['Tapetborttagning', 'Uppsättning', 'Mönsterpassning', 'Specialtapeter'],
   },
-  {
-    icon: Building2,
-    title: 'Fasadrenovering',
-    description: 'Komplett fasadrenovering för att ge ditt hus nytt liv. Vi hanterar allt från rengöring till slutbehandling.',
-    features: ['Fasadtvätt', 'Lagning & reparation', 'Ommålning', 'Energieffektivisering'],
-  },
+
   {
     icon: Hammer,
     title: 'Byggtjänster',
