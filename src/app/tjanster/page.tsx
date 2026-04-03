@@ -1,6 +1,6 @@
 'use client'
 
-import { Paintbrush, Home, Building2, Layers, Wallpaper, Hammer, SprayCan, Ruler, Wrench } from 'lucide-react'
+import { Paintbrush, Home, Building2, Layers, Wallpaper, Hammer, SprayCan, Ruler, Wrench, ClipboardList, Palette, Droplets } from 'lucide-react'
 import WithSkeleton from '@/components/WithSkeleton'
 import { ServicesSkeleton } from '@/components/PageSkeleton'
 
@@ -54,26 +54,44 @@ const services = [
     description: 'Regelbundet underhåll av fastigheter för att bevara värdet och utseendet på din bostad eller lokal.',
     features: ['Löpande underhåll', 'Serviceavtal', 'Akutinsatser', 'Besiktning'],
   },
+  {
+    icon: ClipboardList,
+    title: 'Projektledning',
+    description: 'Vi tar ansvar för hela projektet från start till mål. Planering, samordning och kvalitetssäkring.',
+    features: ['Projektplanering', 'Samordning', 'Tidplan', 'Kvalitetskontroll'],
+  },
+  {
+    icon: Palette,
+    title: 'Dekorationsmålning',
+    description: 'Kreativ och dekorativ målning för unika uttryck. Från marmorering till muralmålning.',
+    features: ['Marmorering', 'Muralmålning', 'Schablonmålning', 'Specialeffekter'],
+  },
+  {
+    icon: Droplets,
+    title: 'Epoxymålning',
+    description: 'Tåliga och hållbara epoxygolv och ytor för garage, industri och kommersiella lokaler.',
+    features: ['Garagegolv', 'Industrigolv', 'Våtrum', 'Betongytor'],
+  },
 ]
 
-function ServiceCard({ service, large = false }: { service: typeof services[number]; large?: boolean }) {
+function ServiceCard({ service, fromRight }: { service: typeof services[number]; fromRight: boolean }) {
   return (
     <div
-      className={`group p-8 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 hover:shadow-xl hover:shadow-zinc-200/50 dark:hover:shadow-zinc-900/50 transition-all duration-300 hover:-translate-y-1 ${
-        large ? 'flex flex-col sm:flex-row sm:items-center gap-8' : ''
+      className={`group flex flex-col sm:flex-row sm:items-center gap-6 p-8 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 hover:shadow-xl hover:shadow-zinc-200/50 dark:hover:shadow-zinc-900/50 transition-all duration-300 hover:-translate-y-1 w-full lg:w-[65%] ${
+        fromRight ? 'lg:ml-auto' : 'lg:mr-auto'
       }`}
     >
-      <div className={`shrink-0 ${large ? 'sm:pl-4' : ''}`}>
-        <div className={`${large ? 'w-20 h-20' : 'w-14 h-14'} bg-wmb-blue/10 dark:bg-wmb-blue-dark/30 text-wmb-blue rounded-xl flex items-center justify-center mb-6 ${large ? 'sm:mb-0' : ''} group-hover:scale-110 transition-transform`}>
-          <service.icon size={large ? 36 : 28} />
+      <div className="shrink-0">
+        <div className="w-16 h-16 bg-wmb-blue/10 dark:bg-wmb-blue-dark/30 text-wmb-blue rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+          <service.icon size={30} />
         </div>
       </div>
 
       <div className="flex-1">
-        <h3 className={`${large ? 'text-2xl' : 'text-xl'} font-bold text-zinc-900 dark:text-white mb-2 group-hover:text-wmb-red transition-colors`}>
+        <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2 group-hover:text-wmb-red transition-colors">
           {service.title}
         </h3>
-        <p className={`text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4 ${large ? 'text-base' : 'text-sm'}`}>
+        <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4 text-sm">
           {service.description}
         </p>
         <div className="flex flex-wrap gap-2">
@@ -92,15 +110,6 @@ function ServiceCard({ service, large = false }: { service: typeof services[numb
 }
 
 export default function TjansterPage() {
-  const rows: { large: typeof services[number]; small: typeof services[number][] }[] = []
-  let i = 0
-  while (i < services.length) {
-    const large = services[i]
-    const small = services.slice(i + 1, i + 3)
-    rows.push({ large, small })
-    i += 1 + small.length
-  }
-
   return (
     <WithSkeleton skeleton={<ServicesSkeleton />}>
       {/* Hero */}
@@ -117,21 +126,15 @@ export default function TjansterPage() {
         </div>
       </section>
 
-      {/* Services Alternating */}
+      {/* Services Alternating Sides */}
       <section className="py-20 sm:py-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          {rows.map((row, idx) => (
-            <div key={idx} className={`grid grid-cols-1 lg:grid-cols-2 gap-8 ${idx % 2 === 1 ? 'lg:direction-rtl' : ''}`}>
-              {/* Stor tjänst */}
-              <ServiceCard service={row.large} large />
-
-              {/* Två små tjänster staplade */}
-              <div className="grid grid-cols-1 gap-8">
-                {row.small.map((service) => (
-                  <ServiceCard key={service.title} service={service} />
-                ))}
-              </div>
-            </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          {services.map((service, i) => (
+            <ServiceCard
+              key={service.title}
+              service={service}
+              fromRight={i % 2 === 1}
+            />
           ))}
         </div>
       </section>

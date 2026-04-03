@@ -17,7 +17,7 @@ export default function Footer() {
                 alt="Wahlströms Måleri & Bygg"
                 width={200}
                 height={70}
-                className="h-16 w-auto"
+                className="h-16 w-auto rounded-md"
               />
             </div>
             <p className="text-sm text-zinc-400 leading-relaxed">
