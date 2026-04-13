@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Star, Users, Briefcase, Shield } from 'lucide-react'
+import { ArrowRight, Star, Users, Briefcase, Shield, Paintbrush, Home as HomeIcon, Layers, Hammer, Wallpaper, SprayCan, Wrench } from 'lucide-react'
 import HeroHeading from '@/components/HeroHeading'
 import HeroSlideshow from '@/components/HeroSlideshow'
 import ProjectParallax from '@/components/ProjectParallax'
@@ -15,16 +15,39 @@ const stats = [
 
 const featuredServices = [
   {
+    icon: Paintbrush,
     title: 'Invändig målning',
     description: 'Professionell invändig målning för hem och kontor med högkvalitativa färger.',
   },
   {
+    icon: HomeIcon,
     title: 'Utvändig målning',
     description: 'Skydda och förnya ditt hus med utvändig målning som håller i alla väder.',
   },
   {
+    icon: Layers,
     title: 'Spackling & renovering',
     description: 'Expert på spackling, hållagning och ytbehandling för perfekta väggar.',
+  },
+  {
+    icon: Hammer,
+    title: 'Byggtjänster',
+    description: 'Kompletterande byggtjänster för helhetslösningar vid renoveringsprojekt.',
+  },
+  {
+    icon: Wallpaper,
+    title: 'Tapetsering',
+    description: 'Professionell tapetsering med precision och noggrannhet.',
+  },
+  {
+    icon: SprayCan,
+    title: 'Lackering',
+    description: 'Professionell lackering av möbler, snickerier och andra ytor.',
+  },
+  {
+    icon: Wrench,
+    title: 'Underhåll',
+    description: 'Regelbundet underhåll för att bevara värdet på din fastighet.',
   },
 ]
 
@@ -100,33 +123,52 @@ export default function Home() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {featuredServices.map((service) => (
-              <div
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {featuredServices.slice(0, 3).map((service) => (
+              <Link
                 key={service.title}
-                className="group bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden hover:shadow-xl hover:shadow-zinc-200/50 dark:hover:shadow-zinc-900/50 transition-all duration-300 hover:-translate-y-1"
+                href="/tjanster"
+                className="group/svc relative rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
-                <div className="h-48 bg-zinc-200 dark:bg-zinc-800 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-wmb-red/20 to-transparent" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-zinc-400 dark:text-zinc-600 text-sm">Bild kommer</span>
+                {/* Bild */}
+                <div className="relative h-52 overflow-hidden">
+                  <div className="w-full h-full bg-zinc-200 dark:bg-zinc-800">
+                    <div className="absolute inset-0 bg-gradient-to-br from-wmb-red/10 via-transparent to-wmb-blue/10" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-zinc-400 dark:text-zinc-600 text-sm">Bild kommer</span>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                  <div className="absolute bottom-4 left-4 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <service.icon size={20} className="text-white" />
+                    </div>
+                    <h3 className="text-lg font-bold text-white">{service.title}</h3>
                   </div>
                 </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">{service.title}</h3>
-                  <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">{service.description}</p>
+
+                {/* Stripes */}
+                <span className="absolute inset-x-0 top-0 h-1.5 z-20 scale-x-0 group-hover/svc:scale-x-100 transition-transform duration-300 origin-left" style={{ backgroundColor: '#d6190c' }} />
+                <span className="absolute inset-x-0 bottom-0 h-1.5 z-20 scale-x-0 group-hover/svc:scale-x-100 transition-transform duration-300 origin-right" style={{ backgroundColor: '#0d237d' }} />
+
+                {/* Info */}
+                <div className="p-5">
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">{service.description}</p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 
           <div className="text-center mt-12">
             <Link
               href="/tjanster"
-              className="inline-flex items-center gap-2 text-wmb-blue hover:text-wmb-red/80 font-semibold transition-colors"
+              className="relative inline-flex items-center gap-2 px-8 py-4 text-zinc-600 dark:text-zinc-200 font-semibold overflow-hidden rounded-lg border border-zinc-300 dark:border-zinc-600 transition-all duration-300 hover:scale-105 group"
+              style={{ backgroundColor: '#ffffff' }}
             >
-              Se alla tjänster
-              <ArrowRight size={18} />
+              <span className="absolute inset-x-0 top-0 h-1.5 z-10 rounded-t-lg scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" style={{ backgroundColor: '#d6190c' }} />
+              <span className="absolute inset-x-0 bottom-0 h-1.5 z-10 rounded-b-lg scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right" style={{ backgroundColor: '#0d237d' }} />
+              <span className="relative z-10">Se alla tjänster</span>
+              <ArrowRight size={18} className="relative z-10" />
             </Link>
           </div>
         </div>

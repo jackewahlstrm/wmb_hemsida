@@ -6,6 +6,7 @@ export interface Project {
   client: string
   images: string[]
   featured: boolean
+  sort_order: number
   created_at: string
 }
 

@@ -2,159 +2,28 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Skeleton from '@mui/material/Skeleton'
-import WithSkeleton from '@/components/WithSkeleton'
-import { SectionSkeleton } from '@/components/PageSkeleton'
 import ProjectLightbox from '@/components/ProjectLightbox'
-
-const projects = [
-  {
-    id: 1,
-    title: 'Jeffs funhouse',
-    category: 'Utvändig',
-    description: 'Komplett målning av min kompis Jeffs hus utanför Florida.',
-    image: '/bluehouse_wmb.webp',
-  },
-  {
-    id: 2,
-    title: 'Kontorsrenovering Kungsholmen',
-    category: 'Kommersiellt',
-    description: 'Total renovering av kontorslokal på 400 kvm.',
-  },
-  {
-    id: 3,
-    title: 'Lägenhet Södermalm',
-    category: 'Invändig',
-    description: 'Invändig målning av 3:a på Södermalm.',
-  },
-  {
-    id: 4,
-    title: 'Radhus Enskede',
-    category: 'Renovering',
-    description: 'Helrenovering av radhus från 1960-talet.',
-  },
-  {
-    id: 5,
-    title: 'Restaurang Östermalm',
-    category: 'Kommersiellt',
-    description: 'Målning och specialeffekter för nyöppnad restaurang.',
-  },
-  {
-    id: 6,
-    title: 'Sekelskiftesfastighet Vasastan',
-    category: 'Renovering',
-    description: 'Varsam renovering av trapphus i sekelskiftesfastighet.',
-  },
-  {
-    id: 7,
-    title: 'Sommarstuga Roslagen',
-    category: 'Utvändig',
-    description: 'Utvändig målning av sommarhus med Falu Rödfärg.',
-  },
-  {
-    id: 8,
-    title: 'Penthouse Strandvägen',
-    category: 'Invändig',
-    description: 'Exklusiv invändig målning med specialfärger.',
-  },
-  {
-    id: 9,
-    title: 'BRF Kungsholmen',
-    category: 'Kommersiellt',
-    description: 'Komplett ommålning av trapphus och gemensamma utrymmen.',
-  },
-  {
-    id: 10,
-    title: 'Villa Saltsjöbaden',
-    category: 'Utvändig',
-    description: 'Utvändig målning och fönsterrenovering av sjönära villa.',
-  },
-  // Extra projekt som visas efter "Se mer"
-  {
-    id: 11,
-    title: 'Kontor Södermalm',
-    category: 'Kommersiellt',
-    description: 'Modern kontorsrenovering med specialfärger och akustiktak.',
-  },
-  {
-    id: 12,
-    title: 'Townhouse Djurgården',
-    category: 'Renovering',
-    description: 'Totalrenovering av klassiskt townhouse med originaldetaljer.',
-  },
-  {
-    id: 13,
-    title: 'Café Vasastan',
-    category: 'Kommersiellt',
-    description: 'Invändig målning och inredning för nyöppnat café.',
-  },
-  {
-    id: 14,
-    title: 'Villa Lidingö',
-    category: 'Utvändig',
-    description: 'Fasadmålning med linoljefärg på sekelskiftesvilla.',
-  },
-  {
-    id: 15,
-    title: 'Lägenhet Östermalm',
-    category: 'Invändig',
-    description: 'Exklusiv spackling och målning i paradlägenhet.',
-  },
-  {
-    id: 16,
-    title: 'Skola Hägersten',
-    category: 'Kommersiellt',
-    description: 'Ommålning av klassrum och korridorer under sommarlovet.',
-  },
-  {
-    id: 17,
-    title: 'Fritidshus Vaxholm',
-    category: 'Utvändig',
-    description: 'Utvändig målning med Falu Rödfärg och fönsterbyte.',
-  },
-  {
-    id: 18,
-    title: 'Radhus Bromma',
-    category: 'Renovering',
-    description: 'Invändig totalrenovering med nytt kök och badrum.',
-  },
-  {
-    id: 19,
-    title: 'Restaurang Gamla Stan',
-    category: 'Kommersiellt',
-    description: 'Varsam målning med hänsyn till historisk interiör.',
-  },
-  {
-    id: 20,
-    title: 'Villa Täby',
-    category: 'Invändig',
-    description: 'Komplett invändig målning efter nybyggnation.',
-  },
-]
+import { getProjectsByCategory } from '@/lib/projects'
+import type { Project } from '@/lib/types'
 
 const INITIAL_COUNT = 10
 const LOAD_MORE_COUNT = 10
 
 const heights = ['h-52', 'h-96', 'h-64', 'h-80', 'h-44', 'h-72', 'h-96', 'h-56', 'h-80', 'h-44', 'h-64', 'h-96', 'h-52', 'h-80', 'h-44', 'h-72', 'h-96', 'h-56', 'h-44', 'h-80']
 
-const floatDurations = [6, 7, 8, 5, 7.5, 6.5, 8.5, 5.5, 7, 6]
-
-function ProjectCard({ project, height, delay, index, onClick }: { project: typeof projects[number]; height: string; delay: number; index: number; onClick: () => void }) {
+function ProjectCard({ project, height, delay, index, onClick }: { project: Project; height: string; delay: number; index: number; onClick: () => void }) {
   const ref = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
   const [mouse, setMouse] = useState({ x: 0, y: 0 })
+  const image = project.images?.[0] || null
 
   useEffect(() => {
     const el = ref.current
     if (!el) return
-
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        // Triggas varje gång kortet scrollas in/ut
-        setVisible(entry.isIntersecting)
-      },
+      ([entry]) => setVisible(entry.isIntersecting),
       { threshold: 0.15 }
     )
-
     observer.observe(el)
     return () => observer.disconnect()
   }, [])
@@ -163,14 +32,9 @@ function ProjectCard({ project, height, delay, index, onClick }: { project: type
     const el = ref.current
     if (!el) return
     const rect = el.getBoundingClientRect()
-    // -1 till 1 från center
     const x = ((e.clientX - rect.left) / rect.width - 0.5) * 2
     const y = ((e.clientY - rect.top) / rect.height - 0.5) * 2
     setMouse({ x, y })
-  }, [])
-
-  const handleMouseLeave = useCallback(() => {
-    setMouse({ x: 0, y: 0 })
   }, [])
 
   return (
@@ -178,7 +42,7 @@ function ProjectCard({ project, height, delay, index, onClick }: { project: type
       ref={ref}
       onClick={onClick}
       onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+      onMouseLeave={() => setMouse({ x: 0, y: 0 })}
       className={`group relative break-inside-avoid overflow-hidden rounded-2xl cursor-pointer ${height}`}
       style={{
         opacity: visible ? 1 : 0,
@@ -186,22 +50,17 @@ function ProjectCard({ project, height, delay, index, onClick }: { project: type
         transition: `opacity 0.6s ease ${delay}s, transform 0.6s ease ${delay}s`,
       }}
     >
-      {/* Parallax-bild */}
-      {project.image ? (
+      {image ? (
         <img
-          src={project.image}
+          src={image}
           alt={project.title}
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out"
-          style={{
-            transform: `scale(1.1) translate(${mouse.x * -15}px, ${mouse.y * -15}px)`,
-          }}
+          style={{ transform: `scale(1.1) translate(${mouse.x * -15}px, ${mouse.y * -15}px)` }}
         />
       ) : (
         <div
           className="absolute inset-0 bg-zinc-200 dark:bg-zinc-800 transition-transform duration-300 ease-out"
-          style={{
-            transform: `scale(1.1) translate(${mouse.x * -15}px, ${mouse.y * -15}px)`,
-          }}
+          style={{ transform: `scale(1.1) translate(${mouse.x * -15}px, ${mouse.y * -15}px)` }}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-wmb-red/10 via-transparent to-wmb-blue/10" />
           <div className="absolute inset-0 flex items-center justify-center">
@@ -233,15 +92,23 @@ function MasonrySkeletons({ count }: { count: number }) {
 }
 
 export default function ProjektPage() {
+  const [projects, setProjects] = useState<Project[]>([])
+  const [loading, setLoading] = useState(true)
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT)
   const [loadingMore, setLoadingMore] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
+  useEffect(() => {
+    getProjectsByCategory('projekt').then((data) => {
+      setProjects(data)
+      setLoading(false)
+    })
+  }, [])
+
   const visibleProjects = projects.slice(0, visibleCount)
   const hasMore = visibleCount < projects.length
 
-  // Fördela kort i 3 kolumner (round-robin)
-  const columns: { project: typeof projects[number]; globalIndex: number }[][] = [[], [], []]
+  const columns: { project: Project; globalIndex: number }[][] = [[], [], []]
   visibleProjects.forEach((project, i) => {
     columns[i % 3].push({ project, globalIndex: i })
   })
@@ -254,8 +121,57 @@ export default function ProjektPage() {
     }, 1500)
   }
 
+  // Lightbox-data: konvertera till format som ProjectLightbox förväntar
+  const lightboxProjects = visibleProjects.map((p) => ({
+    id: typeof p.id === 'string' ? parseInt(p.id, 10) || 0 : 0,
+    title: p.title,
+    description: p.description,
+    image: p.images?.[0] || undefined,
+  }))
+
+  if (loading) {
+    return (
+      <>
+        <section className="py-20 sm:py-28 bg-zinc-50 dark:bg-zinc-900/50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <Skeleton variant="text" width={120} height={20} sx={{ mx: 'auto', mb: 2 }} />
+            <Skeleton variant="text" width={400} height={48} sx={{ mx: 'auto', mb: 2 }} />
+            <Skeleton variant="text" width={500} height={24} sx={{ mx: 'auto' }} />
+          </div>
+        </section>
+        <section className="py-20 sm:py-28">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {[...Array(6)].map((_, i) => (
+                <Skeleton key={i} variant="rounded" height={200} sx={{ borderRadius: '16px' }} />
+              ))}
+            </div>
+          </div>
+        </section>
+      </>
+    )
+  }
+
+  if (projects.length === 0) {
+    return (
+      <>
+        <section className="py-20 sm:py-28 bg-zinc-50 dark:bg-zinc-900/50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p className="text-wmb-blue font-semibold text-sm uppercase tracking-wider mb-3">Våra projekt</p>
+            <h1 className="text-4xl sm:text-5xl font-bold text-zinc-900 dark:text-white mb-6">
+              Arbeten vi är stolta över
+            </h1>
+            <p className="max-w-2xl mx-auto text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              Projekt kommer snart. Håll utkik!
+            </p>
+          </div>
+        </section>
+      </>
+    )
+  }
+
   return (
-    <WithSkeleton skeleton={<SectionSkeleton cards={6} />}>
+    <>
       {/* Hero */}
       <section className="py-20 sm:py-28 bg-zinc-50 dark:bg-zinc-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -320,13 +236,13 @@ export default function ProjektPage() {
 
       {lightboxIndex !== null && (
         <ProjectLightbox
-          projects={visibleProjects}
+          projects={lightboxProjects}
           activeIndex={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
           onPrev={() => setLightboxIndex((lightboxIndex - 1 + visibleProjects.length) % visibleProjects.length)}
           onNext={() => setLightboxIndex((lightboxIndex + 1) % visibleProjects.length)}
         />
       )}
-    </WithSkeleton>
+    </>
   )
 }

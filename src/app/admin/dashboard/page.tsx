@@ -15,6 +15,8 @@ import {
   Image as ImageIcon,
   Upload,
   Pencil,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { uploadImage } from '@/lib/cloudinary'
@@ -70,7 +72,7 @@ export default function AdminDashboard() {
 
   const tabs = [
     { id: 'overview' as Tab, label: 'Översikt', icon: LayoutDashboard },
-    { id: 'projects' as Tab, label: 'Projekt', icon: FolderOpen },
+    { id: 'projects' as Tab, label: 'Bilder', icon: ImageIcon },
     { id: 'clients' as Tab, label: 'Kunder', icon: Users },
     { id: 'settings' as Tab, label: 'Inställningar', icon: Settings },
   ]
@@ -132,7 +134,7 @@ function OverviewTab({ projects, clients }: { projects: Project[]; clients: Clie
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {[
-        { label: 'Projekt', value: projects.length, icon: FolderOpen },
+        { label: 'Bilder', value: new Set(projects.map((p) => p.images?.[0] || p.title)).size, icon: ImageIcon },
         { label: 'Kunder', value: clients.length, icon: Users },
         { label: 'Status', value: 'Aktiv', icon: LayoutDashboard },
       ].map((stat) => (
@@ -164,7 +166,7 @@ function ProjectsTab({
   const [form, setForm] = useState({
     title: '',
     description: '',
-    category: '',
+    categories: [] as string[],
     client: '',
     featured: false,
     images: [] as string[],
@@ -190,24 +192,34 @@ function ProjectsTab({
   }
 
   const handleSave = async () => {
-    if (!form.title || !form.description) return
+    if (!form.title || !form.description || form.categories.length === 0) return
     setSaving(true)
-    await supabase.from('projects').insert([{
+    const rows = form.categories.map((cat) => ({
       title: form.title,
       description: form.description,
-      category: form.category,
+      category: cat,
       client: form.client,
       images: form.images,
       featured: form.featured,
-    }])
-    setForm({ title: '', description: '', category: '', client: '', featured: false, images: [] })
+    }))
+    await supabase.from('projects').insert(rows)
+    setForm({ title: '', description: '', categories: [], client: '', featured: false, images: [] })
     setShowForm(false)
     setSaving(false)
     onReload()
   }
 
+  const toggleCategory = (cat: string) => {
+    setForm((prev) => ({
+      ...prev,
+      categories: prev.categories.includes(cat)
+        ? prev.categories.filter((c) => c !== cat)
+        : [...prev.categories, cat],
+    }))
+  }
+
   const deleteProject = async (id: string) => {
-    if (!confirm('Är du säker på att du vill ta bort detta projekt?')) return
+    if (!confirm('Är du säker på att du vill ta bort denna bild?')) return
     await supabase.from('projects').delete().eq('id', id)
     setProjects(projects.filter((p) => p.id !== id))
   }
@@ -215,13 +227,13 @@ function ProjectsTab({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Projekt</h2>
+        <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Bilder</h2>
         <button
           onClick={() => setShowForm(!showForm)}
           className="inline-flex items-center gap-2 px-4 py-2 bg-wmb-red hover:bg-wmb-red/90 text-white text-sm font-medium rounded-lg transition-colors"
         >
           {showForm ? <X size={18} /> : <Plus size={18} />}
-          {showForm ? 'Avbryt' : 'Nytt projekt'}
+          {showForm ? 'Avbryt' : 'Ladda upp bild'}
         </button>
       </div>
 
@@ -235,22 +247,28 @@ function ProjectsTab({
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-wmb-blue"
-                placeholder="Projektets titel"
+                placeholder="Bildens titel"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-1">Kategori</label>
-              <select
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-wmb-blue"
-              >
-                <option value="">Välj kategori</option>
-                <option value="Invändig">Invändig</option>
-                <option value="Utvändig">Utvändig</option>
-                <option value="Renovering">Renovering</option>
-                <option value="Kommersiellt">Kommersiellt</option>
-              </select>
+              <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-1">Var ska bilden visas? *</label>
+              <div className="space-y-2">
+                {[
+                  { key: 'hero', label: 'Startsida - stora karusellen' },
+                  { key: 'ticker', label: 'Startsida - lilla karusellen' },
+                  { key: 'projekt', label: 'Projekt sida' },
+                ].map((opt) => (
+                  <label key={opt.key} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.categories.includes(opt.key)}
+                      onChange={() => toggleCategory(opt.key)}
+                      className="w-4 h-4 text-wmb-red rounded border-zinc-300 focus:ring-wmb-blue"
+                    />
+                    <span className="text-sm text-zinc-600 dark:text-zinc-300">{opt.label}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
           <div>
@@ -270,7 +288,7 @@ function ProjectsTab({
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               rows={3}
               className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-wmb-blue resize-none"
-              placeholder="Beskriv projektet..."
+              placeholder="Beskriv bilden..."
             />
           </div>
 
@@ -338,11 +356,11 @@ function ProjectsTab({
 
           <button
             onClick={handleSave}
-            disabled={saving || !form.title || !form.description}
+            disabled={saving || !form.title || !form.description || form.categories.length === 0}
             className="inline-flex items-center gap-2 px-6 py-2 bg-wmb-red hover:bg-wmb-red/90 disabled:bg-wmb-red/50 text-white text-sm font-medium rounded-lg transition-colors"
           >
             <Save size={16} />
-            {saving ? 'Sparar...' : 'Spara projekt'}
+            {saving ? 'Sparar...' : 'Spara bild'}
           </button>
         </div>
       )}
@@ -350,40 +368,215 @@ function ProjectsTab({
       {projects.length === 0 ? (
         <div className="text-center py-12 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
           <ImageIcon size={40} className="text-zinc-300 dark:text-zinc-600 mx-auto mb-3" />
-          <p className="text-zinc-500 dark:text-zinc-400">Inga projekt ännu. Skapa ditt första projekt ovan.</p>
+          <p className="text-zinc-500 dark:text-zinc-400">Inga bilder ännu. Ladda upp din första bild ovan.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map((project) => (
-            <div key={project.id} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-              {project.images.length > 0 ? (
-                <img src={project.images[0]} alt={project.title} className="w-full h-40 object-cover" />
-              ) : (
-                <div className="w-full h-40 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                  <ImageIcon size={32} className="text-zinc-300 dark:text-zinc-600" />
-                </div>
-              )}
-              <div className="p-5">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div>
-                    <h3 className="font-semibold text-zinc-900 dark:text-white text-sm">{project.title}</h3>
-                    {project.category && <p className="text-xs text-wmb-blue">{project.category}</p>}
+        <div className="space-y-10">
+          {[
+            { key: 'hero', label: 'Startsida - stora karusellen' },
+            { key: 'ticker', label: 'Startsida - lilla karusellen' },
+          ].map((section) => {
+            const sectionProjects = projects.filter((p) => p.category === section.key)
+            return (
+              <div key={section.key}>
+                <h3 className="text-sm font-semibold text-zinc-900 dark:text-white mb-3 uppercase tracking-wider">{section.label}</h3>
+                {sectionProjects.length === 0 ? (
+                  <p className="text-xs text-zinc-400 italic">Inga bilder i denna kategori.</p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {sectionProjects.map((project) => (
+                      <div key={project.id} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+                        {project.images.length > 0 ? (
+                          <img src={project.images[0]} alt={project.title} className="w-full h-32 object-cover" />
+                        ) : (
+                          <div className="w-full h-32 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                            <ImageIcon size={24} className="text-zinc-300 dark:text-zinc-600" />
+                          </div>
+                        )}
+                        <div className="p-3">
+                          <h4 className="font-medium text-zinc-900 dark:text-white text-xs truncate">{project.title}</h4>
+                          <p className="text-zinc-500 text-xs truncate mt-1">{project.description}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <button
-                    onClick={() => deleteProject(project.id)}
-                    className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 rounded-lg transition-colors shrink-0"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-                <p className="text-zinc-600 dark:text-zinc-400 text-xs leading-relaxed line-clamp-2">{project.description}</p>
-                {project.client && <p className="text-xs text-zinc-400 mt-2">Kund: {project.client}</p>}
-                {project.images.length > 1 && (
-                  <p className="text-xs text-zinc-400 mt-1">{project.images.length} bilder</p>
                 )}
               </div>
-            </div>
-          ))}
+            )
+          })}
+
+          {/* Projekt sida — med ordning */}
+          <div>
+            <h3 className="text-sm font-semibold text-zinc-900 dark:text-white mb-3 uppercase tracking-wider">Projekt sida</h3>
+            {(() => {
+              const projektItems = [...projects.filter((p) => p.category === 'projekt')].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+
+              const moveItem = async (index: number, direction: -1 | 1) => {
+                const targetIndex = index + direction
+                if (targetIndex < 0 || targetIndex >= projektItems.length) return
+                const current = projektItems[index]
+                const target = projektItems[targetIndex]
+                await Promise.all([
+                  supabase.from('projects').update({ sort_order: targetIndex }).eq('id', current.id),
+                  supabase.from('projects').update({ sort_order: index }).eq('id', target.id),
+                ])
+                onReload()
+              }
+
+              if (projektItems.length === 0) {
+                return <p className="text-xs text-zinc-400 italic">Inga bilder i denna kategori.</p>
+              }
+
+              return (
+                <div className="space-y-2">
+                  {projektItems.map((project, index) => (
+                    <div key={project.id} className="flex items-center gap-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden p-2">
+                      {/* Ordningsknappar */}
+                      <div className="flex flex-col gap-0.5 shrink-0">
+                        <button
+                          onClick={() => moveItem(index, -1)}
+                          disabled={index === 0}
+                          className="p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-white disabled:opacity-20 transition-colors"
+                        >
+                          <ArrowUp size={14} />
+                        </button>
+                        <button
+                          onClick={() => moveItem(index, 1)}
+                          disabled={index === projektItems.length - 1}
+                          className="p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-white disabled:opacity-20 transition-colors"
+                        >
+                          <ArrowDown size={14} />
+                        </button>
+                      </div>
+
+                      {/* Ordningsnummer */}
+                      <span className="text-xs font-mono text-zinc-400 w-6 text-center shrink-0">{index + 1}</span>
+
+                      {/* Bild */}
+                      {project.images.length > 0 ? (
+                        <img src={project.images[0]} alt={project.title} className="w-16 h-12 object-cover rounded-lg shrink-0" />
+                      ) : (
+                        <div className="w-16 h-12 bg-zinc-100 dark:bg-zinc-800 rounded-lg flex items-center justify-center shrink-0">
+                          <ImageIcon size={16} className="text-zinc-300 dark:text-zinc-600" />
+                        </div>
+                      )}
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-zinc-900 dark:text-white text-sm truncate">{project.title}</h4>
+                        <p className="text-zinc-500 text-xs truncate">{project.description}</p>
+                      </div>
+
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
+          </div>
+
+          {/* Alla bilder (unika) */}
+          <div>
+            <h3 className="text-sm font-semibold text-zinc-900 dark:text-white mb-3 uppercase tracking-wider">Alla bilder</h3>
+            {(() => {
+              const categoryLabels: Record<string, string> = {
+                hero: 'Stora karusellen',
+                ticker: 'Lilla karusellen',
+                projekt: 'Projekt sida',
+              }
+
+              // Gruppera per bild-URL för att hitta unika bilder
+              const seen = new Map<string, { project: typeof projects[number]; categories: string[] }>()
+              projects.forEach((p) => {
+                const key = p.images?.[0] || p.title
+                if (seen.has(key)) {
+                  const existing = seen.get(key)!
+                  if (p.category && !existing.categories.includes(p.category)) {
+                    existing.categories.push(p.category)
+                  }
+                } else {
+                  seen.set(key, { project: p, categories: p.category ? [p.category] : [] })
+                }
+              })
+              const uniqueItems = Array.from(seen.values())
+
+              return (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {uniqueItems.map(({ project, categories }) => (
+                    <div key={project.id} className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+                      {project.images.length > 0 ? (
+                        <img src={project.images[0]} alt={project.title} className="w-full h-32 object-cover" />
+                      ) : (
+                        <div className="w-full h-32 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                          <ImageIcon size={24} className="text-zinc-300 dark:text-zinc-600" />
+                        </div>
+                      )}
+                      <div className="p-3">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <h4 className="font-medium text-zinc-900 dark:text-white text-xs truncate">{project.title}</h4>
+                          <button
+                            onClick={async () => {
+                              if (!confirm('Ta bort denna bild från ALLA platser?')) return
+                              const imageUrl = project.images?.[0]
+                              if (imageUrl) {
+                                await supabase.from('projects').delete().filter('images', 'cs', `{"${imageUrl}"}`)
+                              } else {
+                                await supabase.from('projects').delete().eq('title', project.title).eq('description', project.description)
+                              }
+                              onReload()
+                            }}
+                            className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 rounded-lg transition-colors shrink-0"
+                            title="Ta bort från alla platser"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                        <p className="text-zinc-500 text-xs truncate mb-2">{project.description}</p>
+                        <div className="flex flex-wrap gap-1">
+                          {(['hero', 'ticker', 'projekt'] as const).map((cat) => {
+                            const isActive = categories.includes(cat)
+                            return (
+                              <button
+                                key={cat}
+                                onClick={async () => {
+                                  const imageUrl = project.images?.[0]
+                                  if (isActive) {
+                                    // Ta bort från denna kategori
+                                    if (imageUrl) {
+                                      await supabase.from('projects').delete().filter('images', 'cs', `{"${imageUrl}"}`).eq('category', cat)
+                                    }
+                                  } else {
+                                    // Lägg till i denna kategori
+                                    await supabase.from('projects').insert([{
+                                      title: project.title,
+                                      description: project.description,
+                                      category: cat,
+                                      client: project.client,
+                                      images: project.images,
+                                      featured: project.featured,
+                                    }])
+                                  }
+                                  onReload()
+                                }}
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full transition-colors ${
+                                  isActive
+                                    ? 'bg-wmb-blue/10 text-wmb-blue'
+                                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 hover:text-zinc-600'
+                                }`}
+                                title={isActive ? `Ta bort från ${categoryLabels[cat]}` : `Lägg till i ${categoryLabels[cat]}`}
+                              >
+                                {categoryLabels[cat]}
+                                {isActive ? <X size={10} /> : <Plus size={10} />}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
+          </div>
         </div>
       )}
     </div>

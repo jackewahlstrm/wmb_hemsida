@@ -1,30 +1,39 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-
-const slides = [
-  { image: '/bluehouse_wmb.webp' },
-  { image: '/bluehouse_wmb.webp' },
-  { image: '/bluehouse_wmb.webp' },
-]
+import { getProjectsByCategory } from '@/lib/projects'
 
 const DURATION = 6000
+const FALLBACK_IMAGE = '/bluehouse_wmb.webp'
 
 export default function HeroSlideshow() {
+  const [slides, setSlides] = useState<string[]>([FALLBACK_IMAGE])
   const [active, setActive] = useState(0)
   const [progress, setProgress] = useState(0)
   const startTime = useRef(Date.now())
   const rafRef = useRef<number>(0)
   const activeRef = useRef(0)
-  const total = slides.length
+  const totalRef = useRef(1)
+
+  useEffect(() => {
+    getProjectsByCategory('hero').then((projects) => {
+      const images = projects
+        .flatMap((p) => p.images)
+        .filter(Boolean)
+      if (images.length > 0) {
+        setSlides(images)
+        totalRef.current = images.length
+      }
+    })
+  }, [])
 
   const advance = useCallback(() => {
-    const next = (activeRef.current + 1) % total
+    const next = (activeRef.current + 1) % totalRef.current
     activeRef.current = next
     setActive(next)
     setProgress(0)
     startTime.current = Date.now()
-  }, [total])
+  }, [])
 
   useEffect(() => {
     const tick = () => {
@@ -47,12 +56,12 @@ export default function HeroSlideshow() {
   return (
     <>
       {/* Bakgrundsbilder som crossfade */}
-      {slides.map((slide, i) => (
+      {slides.map((image, i) => (
         <div
           key={i}
           className={`absolute inset-0 transition-opacity duration-1000 ${i === active ? 'opacity-100' : 'opacity-0'}`}
         >
-          <img src={slide.image} alt="" className="w-full h-full object-cover" />
+          <img src={image} alt="" className="w-full h-full object-cover" />
         </div>
       ))}
 
@@ -60,22 +69,24 @@ export default function HeroSlideshow() {
       <div className="absolute inset-0 bg-zinc-900/70" />
 
       {/* Progressbar längst ned */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 z-20">
-        <div className="flex h-full gap-1">
-          {slides.map((_, i) => (
-            <div key={i} className="flex-1 relative overflow-hidden rounded-full">
-              <div className="absolute inset-0 bg-white/20" />
-              <div
-                className="absolute inset-y-0 left-0 bg-white/60"
-                style={{
-                  width: i < active ? '100%' : i === active ? `${progress * 100}%` : '0%',
-                  transition: i === active ? 'none' : 'width 0.3s ease',
-                }}
-              />
-            </div>
-          ))}
+      {slides.length > 1 && (
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10 z-20">
+          <div className="flex h-full gap-1">
+            {slides.map((_, i) => (
+              <div key={i} className="flex-1 relative overflow-hidden rounded-full">
+                <div className="absolute inset-0 bg-white/20" />
+                <div
+                  className="absolute inset-y-0 left-0 bg-white/60"
+                  style={{
+                    width: i < active ? '100%' : i === active ? `${progress * 100}%` : '0%',
+                    transition: i === active ? 'none' : 'width 0.3s ease',
+                  }}
+                />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </>
   )
 }

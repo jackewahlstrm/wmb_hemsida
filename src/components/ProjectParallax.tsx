@@ -1,26 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { getProjectsByCategory } from '@/lib/projects'
+import type { Project } from '@/lib/types'
 
-const projects = [
-  { title: 'Jeffs funhouse', description: 'Komplett målning av min kompis Jeffs hus utanför Florida.', image: '/bluehouse_wmb.webp' },
-  { title: 'Villa Djursholm', description: 'Komplett utvändig ommålning av villa i Djursholm.', image: null },
-  { title: 'Kontorsrenovering Kungsholmen', description: 'Total renovering av kontorslokal på 400 kvm.', image: null },
-  { title: 'Lägenhet Södermalm', description: 'Invändig målning av 3:a på Södermalm.', image: null },
-  { title: 'Radhus Enskede', description: 'Helrenovering av radhus från 1960-talet.', image: null },
-  { title: 'Restaurang Östermalm', description: 'Målning och specialeffekter för nyöppnad restaurang.', image: null },
-  { title: 'Sekelskiftesfastighet Vasastan', description: 'Varsam renovering av trapphus i sekelskiftesfastighet.', image: null },
-  { title: 'Sommarstuga Roslagen', description: 'Utvändig målning av sommarhus med Falu Rödfärg.', image: null },
-]
+function ProjectCard({ project }: { project: Project }) {
+  const image = project.images?.[0] || null
 
-const topRow = [0, 1, 2, 3]
-const bottomRow = [4, 5, 6, 7]
-
-function ProjectCard({ project }: { project: typeof projects[number] }) {
   return (
     <div className="relative w-72 sm:w-80 h-48 sm:h-56 rounded-2xl overflow-hidden shrink-0 group">
-      {project.image ? (
-        <img src={project.image} alt={project.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+      {image ? (
+        <img src={image} alt={project.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
       ) : (
         <div className="w-full h-full bg-zinc-200 dark:bg-zinc-800 relative">
           <div className="absolute inset-0 bg-gradient-to-br from-wmb-red/10 via-transparent to-wmb-blue/10" />
@@ -40,7 +30,7 @@ function ProjectCard({ project }: { project: typeof projects[number] }) {
   )
 }
 
-function TickerRow({ items, reverse }: { items: number[]; reverse?: boolean }) {
+function TickerRow({ items, reverse }: { items: Project[]; reverse?: boolean }) {
   const [paused, setPaused] = useState(false)
   const tripled = [...items, ...items, ...items]
 
@@ -57,8 +47,8 @@ function TickerRow({ items, reverse }: { items: number[]; reverse?: boolean }) {
           animationPlayState: paused ? 'paused' : 'running',
         }}
       >
-        {tripled.map((projectIndex, i) => (
-          <ProjectCard key={i} project={projects[projectIndex]} />
+        {tripled.map((project, i) => (
+          <ProjectCard key={`${project.id}-${i}`} project={project} />
         ))}
       </div>
     </div>
@@ -66,23 +56,40 @@ function TickerRow({ items, reverse }: { items: number[]; reverse?: boolean }) {
 }
 
 export default function ProjectParallax() {
+  const [projects, setProjects] = useState<Project[]>([])
+
+  useEffect(() => {
+    getProjectsByCategory('ticker').then((data) => {
+      setProjects(data)
+    })
+  }, [])
+
+  // Dela upp i två rader
+  const mid = Math.ceil(projects.length / 2)
+  const topRow = projects.slice(0, Math.max(mid, 1))
+  const bottomRow = projects.slice(mid).length > 0 ? projects.slice(mid) : projects
+
   return (
-    <section className="overflow-hidden">
-      <div className="py-20 sm:py-28 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <p className="text-wmb-blue font-semibold text-sm uppercase tracking-wider mb-3">Tidigare projekt</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
-              Ett urval av våra arbeten
-            </h2>
-          </div>
+    <section className="py-20 sm:py-28 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+        <div className="text-center">
+          <p className="text-wmb-blue font-semibold text-sm uppercase tracking-wider mb-3">Tidigare projekt</p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
+            Ett urval av våra arbeten
+          </h2>
         </div>
       </div>
 
-      <div className="space-y-6 py-12">
-        <TickerRow items={topRow} />
-        <TickerRow items={bottomRow} reverse />
-      </div>
+      {projects.length > 0 ? (
+        <div className="space-y-6">
+          <TickerRow items={topRow} />
+          <TickerRow items={bottomRow} reverse />
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <p className="text-zinc-400">Bilder laddas...</p>
+        </div>
+      )}
 
       <style jsx>{`
         @keyframes ticker-left {
