@@ -2,9 +2,17 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { useEffect, useState } from 'react'
 import { Phone, Mail, MapPin } from 'lucide-react'
+import { getContactInfo, telHref, mailHref, formatPhone, DEFAULT_CONTACT, type ContactInfo } from '@/lib/contact'
 
 export default function Footer() {
+  const [contact, setContact] = useState<ContactInfo>(DEFAULT_CONTACT)
+
+  useEffect(() => {
+    getContactInfo().then(setContact)
+  }, [])
+
   return (
     <footer className="bg-wmb-blue-dark text-zinc-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -66,20 +74,20 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-center gap-3">
                 <Phone size={16} className="text-wmb-blue shrink-0" />
-                <a href="tel:+46707358181" className="text-sm text-zinc-400 hover:text-wmb-red transition-colors">
-                  0707358181
+                <a href={telHref(contact.phone)} className="text-sm text-zinc-400 hover:text-wmb-red transition-colors">
+                  {formatPhone(contact.phone)}
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail size={16} className="text-wmb-blue shrink-0" />
-                <a href="mailto:Tomas.wmb@telia.com" className="text-sm text-zinc-400 hover:text-wmb-red transition-colors">
-                  Tomas.wmb@telia.com
+                <a href={mailHref(contact.email)} className="text-sm text-zinc-400 hover:text-wmb-red transition-colors">
+                  {contact.email}
                 </a>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin size={16} className="text-wmb-blue shrink-0 mt-0.5" />
                 <span className="text-sm text-zinc-400">
-                  Stockholm, Sverige
+                  {contact.address}
                 </span>
               </li>
             </ul>

@@ -4,10 +4,9 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { getProjectsByCategory } from '@/lib/projects'
 
 const DURATION = 6000
-const FALLBACK_IMAGE = '/bluehouse_wmb.webp'
 
 export default function HeroSlideshow() {
-  const [slides, setSlides] = useState<string[]>([FALLBACK_IMAGE])
+  const [slides, setSlides] = useState<string[]>([])
   const [active, setActive] = useState(0)
   const [progress, setProgress] = useState(0)
   const startTime = useRef(Date.now())
@@ -20,10 +19,8 @@ export default function HeroSlideshow() {
       const images = projects
         .flatMap((p) => p.images)
         .filter(Boolean)
-      if (images.length > 0) {
-        setSlides(images)
-        totalRef.current = images.length
-      }
+      setSlides(images)
+      totalRef.current = Math.max(images.length, 1)
     })
   }, [])
 

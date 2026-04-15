@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CTASection from "@/components/CTASection";
 import ScrollToTop from "@/components/ScrollToTop";
+// import LoadingScreen from "@/components/LoadingScreen";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,13 +27,15 @@ export default function RootLayout({
     <html lang="sv" suppressHydrationWarning>
       <body className={`${inter.className} antialiased bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100`}>
         <ThemeProvider>
-          <ScrollToTop />
-          <Navbar />
-          <main className="min-h-screen pt-20 sm:pt-26">
-            {children}
-          </main>
-          <CTASection />
-          <Footer />
+          {/* <LoadingScreen> */}
+            <ScrollToTop />
+            <Navbar />
+            <main className="min-h-screen pt-20 sm:pt-26">
+              {children}
+            </main>
+            <CTASection />
+            <Footer />
+          {/* </LoadingScreen> */}
         </ThemeProvider>
       </body>
     </html>

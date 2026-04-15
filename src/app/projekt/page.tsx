@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Skeleton from '@mui/material/Skeleton'
 import ProjectLightbox from '@/components/ProjectLightbox'
-import { getProjectsByCategory } from '@/lib/projects'
+import { getProjectsByCategory, formatTitle } from '@/lib/projects'
 import type { Project } from '@/lib/types'
 
 const INITIAL_COUNT = 10
@@ -72,7 +72,7 @@ function ProjectCard({ project, height, delay, index, onClick }: { project: Proj
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
       <div className="absolute bottom-0 left-0 right-0 p-5 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-        <h3 className="text-lg font-bold text-white mb-1">{project.title}</h3>
+        <h3 className="text-lg font-bold text-white mb-1">{formatTitle(project)}</h3>
         <p className="text-white/80 text-sm leading-relaxed">{project.description}</p>
       </div>
     </div>
@@ -124,7 +124,7 @@ export default function ProjektPage() {
   // Lightbox-data: konvertera till format som ProjectLightbox förväntar
   const lightboxProjects = visibleProjects.map((p) => ({
     id: typeof p.id === 'string' ? parseInt(p.id, 10) || 0 : 0,
-    title: p.title,
+    title: formatTitle(p),
     description: p.description,
     image: p.images?.[0] || undefined,
   }))

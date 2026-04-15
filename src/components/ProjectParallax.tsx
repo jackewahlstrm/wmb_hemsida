@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getProjectsByCategory } from '@/lib/projects'
+import { getProjectsByCategory, formatTitle } from '@/lib/projects'
 import type { Project } from '@/lib/types'
 
 function ProjectCard({ project }: { project: Project }) {
@@ -22,7 +22,7 @@ function ProjectCard({ project }: { project: Project }) {
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         <div className="absolute bottom-0 left-0 right-0 p-5 translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-          <h3 className="text-white font-bold text-sm mb-1">{project.title}</h3>
+          <h3 className="text-white font-bold text-sm mb-1">{formatTitle(project)}</h3>
           <p className="text-white/70 text-xs">{project.description}</p>
         </div>
       </div>
@@ -32,7 +32,11 @@ function ProjectCard({ project }: { project: Project }) {
 
 function TickerRow({ items, reverse }: { items: Project[]; reverse?: boolean }) {
   const [paused, setPaused] = useState(false)
-  const tripled = [...items, ...items, ...items]
+  // Säkerställ tillräckligt med kort för att fylla skärmbredden även med få bilder
+  const MIN_BASE = 8
+  const multiplier = items.length > 0 ? Math.max(1, Math.ceil(MIN_BASE / items.length)) : 1
+  const expanded = Array.from({ length: multiplier }, () => items).flat()
+  const tripled = [...expanded, ...expanded, ...expanded]
 
   return (
     <div
@@ -43,7 +47,7 @@ function TickerRow({ items, reverse }: { items: Project[]; reverse?: boolean }) 
       <div
         className="flex gap-6 w-max"
         style={{
-          animation: `${reverse ? 'ticker-right' : 'ticker-left'} 35s linear infinite`,
+          animation: `${reverse ? 'ticker-right' : 'ticker-left'} 150s linear infinite`,
           animationPlayState: paused ? 'paused' : 'running',
         }}
       >

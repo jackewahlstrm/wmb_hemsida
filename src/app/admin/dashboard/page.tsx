@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { uploadImage } from '@/lib/cloudinary'
+import { formatTitle } from '@/lib/projects'
 import type { Project, Client as ClientType, SiteContent } from '@/lib/types'
 
 type Tab = 'overview' | 'projects' | 'clients' | 'settings'
@@ -74,7 +75,7 @@ export default function AdminDashboard() {
     { id: 'overview' as Tab, label: 'Översikt', icon: LayoutDashboard },
     { id: 'projects' as Tab, label: 'Bilder', icon: ImageIcon },
     { id: 'clients' as Tab, label: 'Kunder', icon: Users },
-    { id: 'settings' as Tab, label: 'Inställningar', icon: Settings },
+    { id: 'settings' as Tab, label: 'Kontaktuppgifter', icon: Settings },
   ]
 
   return (
@@ -192,7 +193,7 @@ function ProjectsTab({
   }
 
   const handleSave = async () => {
-    if (!form.title || !form.description || form.categories.length === 0) return
+    if (!form.title || !form.description || form.categories.length === 0 || form.images.length === 0) return
     setSaving(true)
     const rows = form.categories.map((cat) => ({
       title: form.title,
@@ -341,22 +342,9 @@ function ProjectsTab({
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="featured"
-              checked={form.featured}
-              onChange={(e) => setForm({ ...form, featured: e.target.checked })}
-              className="w-4 h-4 text-wmb-red rounded border-zinc-300 focus:ring-wmb-blue"
-            />
-            <label htmlFor="featured" className="text-sm text-zinc-600 dark:text-zinc-300">
-              Visa på startsidan
-            </label>
-          </div>
-
           <button
             onClick={handleSave}
-            disabled={saving || !form.title || !form.description || form.categories.length === 0}
+            disabled={saving || !form.title || !form.description || form.categories.length === 0 || form.images.length === 0}
             className="inline-flex items-center gap-2 px-6 py-2 bg-wmb-red hover:bg-wmb-red/90 disabled:bg-wmb-red/50 text-white text-sm font-medium rounded-lg transition-colors"
           >
             <Save size={16} />
@@ -372,14 +360,97 @@ function ProjectsTab({
         </div>
       ) : (
         <div className="space-y-10">
-          {[
-            { key: 'hero', label: 'Startsida - stora karusellen' },
-            { key: 'ticker', label: 'Startsida - lilla karusellen' },
-          ].map((section) => {
-            const sectionProjects = projects.filter((p) => p.category === section.key)
+          {/* Stora karusellen — med ordning */}
+          {(() => {
+            const sectionProjects = [...projects.filter((p) => p.category === 'hero')].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+            const softLimit = 10
+            const overLimit = sectionProjects.length > softLimit
+
+            const moveItem = async (index: number, direction: -1 | 1) => {
+              const targetIndex = index + direction
+              if (targetIndex < 0 || targetIndex >= sectionProjects.length) return
+              const current = sectionProjects[index]
+              const target = sectionProjects[targetIndex]
+              await Promise.all([
+                supabase.from('projects').update({ sort_order: targetIndex }).eq('id', current.id),
+                supabase.from('projects').update({ sort_order: index }).eq('id', target.id),
+              ])
+              onReload()
+            }
+
             return (
-              <div key={section.key}>
-                <h3 className="text-sm font-semibold text-zinc-900 dark:text-white mb-3 uppercase tracking-wider">{section.label}</h3>
+              <div>
+                <div className="flex items-baseline justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-wider">Startsida - stora karusellen</h3>
+                  <span className={`text-xs font-mono ${overLimit ? 'text-red-500' : 'text-zinc-400'}`}>
+                    {sectionProjects.length} / {softLimit}
+                  </span>
+                </div>
+                {overLimit && (
+                  <p className="text-xs text-red-500 mb-3 italic">
+                    ⚠ Rekommenderad gräns är {softLimit} bilder. Fler kan påverka prestanda.
+                  </p>
+                )}
+                {sectionProjects.length === 0 ? (
+                  <p className="text-xs text-zinc-400 italic">Inga bilder i denna kategori.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {sectionProjects.map((project, index) => (
+                      <div key={project.id} className="flex items-center gap-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden p-2">
+                        <div className="flex flex-col gap-0.5 shrink-0">
+                          <button
+                            onClick={() => moveItem(index, -1)}
+                            disabled={index === 0}
+                            className="p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-white disabled:opacity-20 transition-colors"
+                          >
+                            <ArrowUp size={14} />
+                          </button>
+                          <button
+                            onClick={() => moveItem(index, 1)}
+                            disabled={index === sectionProjects.length - 1}
+                            className="p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-white disabled:opacity-20 transition-colors"
+                          >
+                            <ArrowDown size={14} />
+                          </button>
+                        </div>
+                        <span className="text-xs font-mono text-zinc-400 w-6 text-center shrink-0">{index + 1}</span>
+                        {project.images.length > 0 ? (
+                          <img src={project.images[0]} alt={project.title} className="w-16 h-12 object-cover rounded-lg shrink-0" />
+                        ) : (
+                          <div className="w-16 h-12 bg-zinc-100 dark:bg-zinc-800 rounded-lg flex items-center justify-center shrink-0">
+                            <ImageIcon size={16} className="text-zinc-300 dark:text-zinc-600" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-zinc-900 dark:text-white text-sm truncate">{formatTitle(project)}</h4>
+                          <p className="text-zinc-500 text-xs truncate">{project.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })()}
+
+          {/* Lilla karusellen — grid */}
+          {(() => {
+            const sectionProjects = projects.filter((p) => p.category === 'ticker')
+            const softLimit = 14
+            const overLimit = sectionProjects.length > softLimit
+            return (
+              <div>
+                <div className="flex items-baseline justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-wider">Startsida - lilla karusellen</h3>
+                  <span className={`text-xs font-mono ${overLimit ? 'text-red-500' : 'text-zinc-400'}`}>
+                    {sectionProjects.length} / {softLimit}
+                  </span>
+                </div>
+                {overLimit && (
+                  <p className="text-xs text-red-500 mb-3 italic">
+                    ⚠ Rekommenderad gräns är {softLimit} bilder. Fler kan påverka prestanda.
+                  </p>
+                )}
                 {sectionProjects.length === 0 ? (
                   <p className="text-xs text-zinc-400 italic">Inga bilder i denna kategori.</p>
                 ) : (
@@ -394,7 +465,7 @@ function ProjectsTab({
                           </div>
                         )}
                         <div className="p-3">
-                          <h4 className="font-medium text-zinc-900 dark:text-white text-xs truncate">{project.title}</h4>
+                          <h4 className="font-medium text-zinc-900 dark:text-white text-xs truncate">{formatTitle(project)}</h4>
                           <p className="text-zinc-500 text-xs truncate mt-1">{project.description}</p>
                         </div>
                       </div>
@@ -403,7 +474,7 @@ function ProjectsTab({
                 )}
               </div>
             )
-          })}
+          })()}
 
           {/* Projekt sida — med ordning */}
           <div>
@@ -463,7 +534,7 @@ function ProjectsTab({
 
                       {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-zinc-900 dark:text-white text-sm truncate">{project.title}</h4>
+                        <h4 className="font-medium text-zinc-900 dark:text-white text-sm truncate">{formatTitle(project)}</h4>
                         <p className="text-zinc-500 text-xs truncate">{project.description}</p>
                       </div>
 
@@ -512,7 +583,7 @@ function ProjectsTab({
                       )}
                       <div className="p-3">
                         <div className="flex items-start justify-between gap-2 mb-1">
-                          <h4 className="font-medium text-zinc-900 dark:text-white text-xs truncate">{project.title}</h4>
+                          <h4 className="font-medium text-zinc-900 dark:text-white text-xs truncate">{formatTitle(project)}</h4>
                           <button
                             onClick={async () => {
                               if (!confirm('Ta bort denna bild från ALLA platser?')) return
@@ -751,10 +822,9 @@ function ClientsTab({
 
 /* ==================== SETTINGS ==================== */
 const SETTINGS_FIELDS = [
-  { section: 'contact', key: 'phone', label: 'Telefonnummer', placeholder: '070-123 45 67' },
-  { section: 'contact', key: 'email', label: 'E-postadress', placeholder: 'info@wahlstromsmaleri.se' },
-  { section: 'contact', key: 'address', label: 'Adress', placeholder: 'Exempelgatan 1, 123 45 Stockholm' },
-  { section: 'contact', key: 'hours', label: 'Öppettider', placeholder: 'Mån–Fre: 07:00–17:00' },
+  { section: 'contact', key: 'phone', label: 'Telefonnummer', placeholder: '0707358181' },
+  { section: 'contact', key: 'email', label: 'E-postadress', placeholder: 'Tomas.wmb@telia.com' },
+  { section: 'contact', key: 'address', label: 'Adress', placeholder: 'Stockholm, Sverige' },
 ]
 
 function SettingsTab({ siteContent, onReload }: { siteContent: SiteContent[]; onReload: () => void }) {
@@ -791,7 +861,7 @@ function SettingsTab({ siteContent, onReload }: { siteContent: SiteContent[]; on
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Inställningar</h2>
+      <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Kontaktuppgifter</h2>
 
       <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 space-y-5">
         <h3 className="text-sm font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
@@ -822,7 +892,7 @@ function SettingsTab({ siteContent, onReload }: { siteContent: SiteContent[]; on
             className="inline-flex items-center gap-2 px-6 py-2 bg-wmb-red hover:bg-wmb-red/90 disabled:bg-wmb-red/50 text-white text-sm font-medium rounded-lg transition-colors"
           >
             <Save size={16} />
-            {saving ? 'Sparar...' : 'Spara inställningar'}
+            {saving ? 'Sparar...' : 'Spara kontaktuppgifter'}
           </button>
           {saved && <span className="text-green-500 text-sm">Sparat!</span>}
         </div>

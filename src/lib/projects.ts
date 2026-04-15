@@ -1,6 +1,13 @@
 import { supabase } from './supabase'
 import type { Project } from './types'
 
+export function formatTitle(project: { title: string; client?: string }): string {
+  if (project.client && project.client.trim()) {
+    return `${project.title} - ${project.client}`
+  }
+  return project.title
+}
+
 export async function getProjects(): Promise<Project[]> {
   const { data } = await supabase
     .from('projects')

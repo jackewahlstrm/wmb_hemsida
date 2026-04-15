@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Star, Users, Briefcase, Shield, Paintbrush, Home as HomeIcon, Layers, Hammer, Wallpaper, SprayCan, Wrench } from 'lucide-react'
+import { ArrowRight, Star, Users, Briefcase, Shield, Paintbrush, SprayCan, Droplets } from 'lucide-react'
 import HeroHeading from '@/components/HeroHeading'
 import HeroSlideshow from '@/components/HeroSlideshow'
 import ProjectParallax from '@/components/ProjectParallax'
@@ -18,36 +18,19 @@ const featuredServices = [
     icon: Paintbrush,
     title: 'Invändig målning',
     description: 'Professionell invändig målning för hem och kontor med högkvalitativa färger.',
-  },
-  {
-    icon: HomeIcon,
-    title: 'Utvändig målning',
-    description: 'Skydda och förnya ditt hus med utvändig målning som håller i alla väder.',
-  },
-  {
-    icon: Layers,
-    title: 'Spackling & renovering',
-    description: 'Expert på spackling, hållagning och ytbehandling för perfekta väggar.',
-  },
-  {
-    icon: Hammer,
-    title: 'Byggtjänster',
-    description: 'Kompletterande byggtjänster för helhetslösningar vid renoveringsprojekt.',
-  },
-  {
-    icon: Wallpaper,
-    title: 'Tapetsering',
-    description: 'Professionell tapetsering med precision och noggrannhet.',
+    slug: 'invandig-malning',
   },
   {
     icon: SprayCan,
     title: 'Lackering',
     description: 'Professionell lackering av möbler, snickerier och andra ytor.',
+    slug: 'lackering',
   },
   {
-    icon: Wrench,
-    title: 'Underhåll',
-    description: 'Regelbundet underhåll för att bevara värdet på din fastighet.',
+    icon: Droplets,
+    title: 'Epoxymålning',
+    description: 'Tåliga epoxygolv och ytor för garage, industri och kommersiella lokaler.',
+    slug: 'epoxymalning',
   },
 ]
 
@@ -124,10 +107,10 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {featuredServices.slice(0, 3).map((service) => (
+            {featuredServices.map((service) => (
               <Link
                 key={service.title}
-                href="/tjanster"
+                href={`/tjanster?service=${service.slug}`}
                 className="group/svc relative rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
                 {/* Bild */}
@@ -162,13 +145,13 @@ export default function Home() {
           <div className="text-center mt-12">
             <Link
               href="/tjanster"
-              className="relative inline-flex items-center gap-2 px-8 py-4 text-zinc-600 dark:text-zinc-200 font-semibold overflow-hidden rounded-lg border border-zinc-300 dark:border-zinc-600 transition-all duration-300 hover:scale-105 group"
-              style={{ backgroundColor: '#ffffff' }}
+              className="group inline-flex items-center gap-2 text-wmb-blue hover:text-wmb-red font-semibold text-sm transition-colors"
             >
-              <span className="absolute inset-x-0 top-0 h-1.5 z-10 rounded-t-lg scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" style={{ backgroundColor: '#d6190c' }} />
-              <span className="absolute inset-x-0 bottom-0 h-1.5 z-10 rounded-b-lg scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right" style={{ backgroundColor: '#0d237d' }} />
-              <span className="relative z-10">Se alla tjänster</span>
-              <ArrowRight size={18} className="relative z-10" />
+              <span className="relative">
+                Se alla tjänster
+                <span className="absolute left-0 right-0 bottom-0 h-0.5 bg-current scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+              </span>
+              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
             </Link>
           </div>
         </div>

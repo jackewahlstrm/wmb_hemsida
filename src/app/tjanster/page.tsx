@@ -1,12 +1,14 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Paintbrush, Home, Building2, Layers, Wallpaper, Hammer, SprayCan, Ruler, Wrench, ClipboardList, Palette, Droplets } from 'lucide-react'
 import WithSkeleton from '@/components/WithSkeleton'
 import { ServicesSkeleton } from '@/components/PageSkeleton'
 
 const services = [
   {
+    slug: 'invandig-malning',
     icon: Paintbrush,
     title: 'Invändig målning',
     description: 'Professionell invändig målning av väggar, tak och snickerier. Vi använder högkvalitativa färger för ett hållbart och vackert resultat.',
@@ -14,6 +16,7 @@ const services = [
     image: '/bluehouse_wmb.webp',
   },
   {
+    slug: 'utvandig-malning',
     icon: Home,
     title: 'Utvändig målning',
     description: 'Skydda och förnya ditt hus med utvändig målning. Vi hanterar alla typer av fasader och väderförhållanden.',
@@ -21,6 +24,7 @@ const services = [
     image: null,
   },
   {
+    slug: 'spackling',
     icon: Layers,
     title: 'Spackling',
     description: 'Expert på spackling och ytbehandling. Vi skapar perfekt släta ytor inför målning eller tapetsering.',
@@ -28,6 +32,7 @@ const services = [
     image: null,
   },
   {
+    slug: 'tapetsering',
     icon: Wallpaper,
     title: 'Tapetsering',
     description: 'Professionell tapetsering med precision och noggrannhet. Vi hjälper dig välja rätt tapet för ditt rum.',
@@ -35,6 +40,7 @@ const services = [
     image: null,
   },
   {
+    slug: 'fasadrenovering',
     icon: Building2,
     title: 'Fasadrenovering',
     description: 'Komplett fasadrenovering för att ge ditt hus nytt liv. Vi hanterar allt från rengöring till slutbehandling.',
@@ -42,6 +48,7 @@ const services = [
     image: null,
   },
   {
+    slug: 'byggtjanster',
     icon: Hammer,
     title: 'Byggtjänster',
     description: 'Vi erbjuder kompletterande byggtjänster för att kunna leverera helhetslösningar vid renoveringsprojekt.',
@@ -49,6 +56,7 @@ const services = [
     image: null,
   },
   {
+    slug: 'lackering',
     icon: SprayCan,
     title: 'Lackering',
     description: 'Professionell lackering av möbler, snickerier och andra ytor. Vi ger nytt liv åt slitna möbler.',
@@ -56,6 +64,7 @@ const services = [
     image: null,
   },
   {
+    slug: 'fargsattning',
     icon: Ruler,
     title: 'Färgsättning & rådgivning',
     description: 'Osäker på vilken färg du ska välja? Vi hjälper dig med professionell färgsättning och materialval.',
@@ -63,6 +72,7 @@ const services = [
     image: null,
   },
   {
+    slug: 'underhall',
     icon: Wrench,
     title: 'Underhåll',
     description: 'Regelbundet underhåll av fastigheter för att bevara värdet och utseendet på din bostad eller lokal.',
@@ -70,6 +80,7 @@ const services = [
     image: null,
   },
   {
+    slug: 'projektledning',
     icon: ClipboardList,
     title: 'Projektledning',
     description: 'Vi tar ansvar för hela projektet från start till mål. Planering, samordning och kvalitetssäkring.',
@@ -77,6 +88,7 @@ const services = [
     image: null,
   },
   {
+    slug: 'dekorationsmalning',
     icon: Palette,
     title: 'Dekorationsmålning',
     description: 'Kreativ och dekorativ målning för unika uttryck. Från marmorering till muralmålning.',
@@ -84,6 +96,7 @@ const services = [
     image: null,
   },
   {
+    slug: 'epoxymalning',
     icon: Droplets,
     title: 'Epoxymålning',
     description: 'Tåliga och hållbara epoxygolv och ytor för garage, industri och kommersiella lokaler.',
@@ -92,36 +105,25 @@ const services = [
   },
 ]
 
-export default function TjansterPage() {
-  const sectionRefs = useRef<(HTMLDivElement | null)[]>([])
-  const [activeIndex, setActiveIndex] = useState(0)
+function TjansterContent() {
+  const searchParams = useSearchParams()
+  const slugParam = searchParams.get('service')
+  const initialIndex = slugParam ? services.findIndex((s) => s.slug === slugParam) : 0
+  const [active, setActive] = useState(initialIndex >= 0 ? initialIndex : 0)
 
   useEffect(() => {
-    const handleScroll = () => {
-      const viewportCenter = window.innerHeight / 2
-
-      for (let i = sectionRefs.current.length - 1; i >= 0; i--) {
-        const el = sectionRefs.current[i]
-        if (!el) continue
-        const rect = el.getBoundingClientRect()
-        if (rect.top <= viewportCenter) {
-          setActiveIndex(i)
-          break
-        }
-      }
+    if (slugParam) {
+      const i = services.findIndex((s) => s.slug === slugParam)
+      if (i >= 0) setActive(i)
     }
+  }, [slugParam])
 
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    handleScroll()
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  const active = services[activeIndex]
+  const service = services[active]
 
   return (
     <WithSkeleton skeleton={<ServicesSkeleton />}>
       {/* Hero */}
-      <section className="py-20 sm:py-28 bg-zinc-50 dark:bg-zinc-900/50">
+      <section className="py-10 sm:py-14 bg-zinc-50 dark:bg-zinc-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-wmb-blue font-semibold text-sm uppercase tracking-wider mb-3">Våra tjänster</p>
           <h1 className="text-4xl sm:text-5xl font-bold text-zinc-900 dark:text-white mb-6">
@@ -134,122 +136,92 @@ export default function TjansterPage() {
         </div>
       </section>
 
-      {/* Scroll-reveal */}
-      <section className="relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+      {/* Tabs + preview */}
+      <section className="py-10 sm:py-14">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Tabs (pillar) */}
+          <div className="flex flex-wrap justify-center gap-2 mb-6">
+            {services.map((s, i) => {
+              const isActive = active === i
+              return (
+                <button
+                  key={s.title}
+                  onClick={() => setActive(i)}
+                  className={`group/tab relative inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium overflow-hidden transition-all duration-300 hover:scale-105 ${
+                    isActive
+                      ? 'bg-wmb-red text-white shadow-md'
+                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white'
+                  }`}
+                >
+                  <s.icon size={14} className={isActive ? 'text-white' : 'text-wmb-blue'} />
+                  <span>{s.title}</span>
+                </button>
+              )
+            })}
+          </div>
 
-            {/* Vänster — sticky bild */}
-            <div className="hidden lg:block relative">
-              <div className="sticky top-32 h-[60vh] py-8">
-                <div className="relative w-full h-full rounded-2xl overflow-hidden">
-                  {/* Alla bilder stackade, aktiv synlig */}
-                  {services.map((service, i) => (
-                    <div
-                      key={service.title}
-                      className="absolute inset-0 transition-opacity duration-700"
-                      style={{ opacity: i === activeIndex ? 1 : 0 }}
-                    >
-                      {service.image ? (
-                        <img src={service.image} alt={service.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-zinc-200 dark:bg-zinc-800">
-                          <div className="absolute inset-0 bg-gradient-to-br from-wmb-red/10 via-transparent to-wmb-blue/10" />
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-zinc-400 dark:text-zinc-600 text-sm">Bild kommer</span>
-                          </div>
-                        </div>
-                      )}
+          {/* Preview-panel */}
+          <div className="relative rounded-2xl overflow-hidden bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl">
+            <div key={active} className="animate-fade-in grid grid-cols-1 lg:grid-cols-2">
+              {/* Bild */}
+              <div className="relative h-72 lg:h-[480px]">
+                {service.image ? (
+                  <img src={service.image} alt={service.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-zinc-200 dark:bg-zinc-800 relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-wmb-red/10 via-transparent to-wmb-blue/10" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-zinc-400 dark:text-zinc-600 text-sm">Bild kommer</span>
                     </div>
-                  ))}
-
-                  {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-
-                  {/* Ikon + titel på bilden */}
-                  <div className="absolute bottom-6 left-6 z-20 flex items-center gap-3">
-                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center transition-all duration-500">
-                      <active.icon size={26} className="text-white" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-white">{active.title}</h3>
                   </div>
-
-                  {/* Progress */}
-                  <div className="absolute right-6 top-6 bottom-6 w-1 bg-white/10 rounded-full z-20">
-                    <div
-                      className="w-full bg-white/60 rounded-full transition-all duration-500"
-                      style={{ height: `${((activeIndex + 1) / services.length) * 100}%` }}
-                    />
-                  </div>
+                )}
+                <div className="absolute top-4 left-4 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <service.icon size={22} className="text-white" />
                 </div>
               </div>
-            </div>
 
-            {/* Höger — scrollande text-sektioner */}
-            <div className="lg:pl-12">
-              {services.map((service, i) => (
-                <div
-                  key={service.title}
-                  ref={(el) => { sectionRefs.current[i] = el }}
-                  className="min-h-[70vh] flex items-center py-16"
-                >
-                  <div
-                    className="transition-all duration-500"
-                    style={{
-                      opacity: i === activeIndex ? 1 : 0.3,
-                      transform: i === activeIndex ? 'translateY(0)' : 'translateY(20px)',
-                    }}
-                  >
-                    {/* Mobil: visa bild */}
-                    <div className="lg:hidden relative h-48 rounded-2xl overflow-hidden mb-6">
-                      {service.image ? (
-                        <img src={service.image} alt={service.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-zinc-200 dark:bg-zinc-800">
-                          <div className="absolute inset-0 bg-gradient-to-br from-wmb-red/10 via-transparent to-wmb-blue/10" />
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-zinc-400 dark:text-zinc-600 text-sm">Bild kommer</span>
-                          </div>
-                        </div>
-                      )}
-                      <span className="absolute inset-x-0 top-0 h-1.5" style={{ backgroundColor: '#d6190c' }} />
-                      <span className="absolute inset-x-0 bottom-0 h-1.5" style={{ backgroundColor: '#0d237d' }} />
+              {/* Info */}
+              <div className="p-8 lg:p-12 flex flex-col justify-center">
+                <span className="text-xs font-medium text-wmb-blue uppercase tracking-wider mb-3">
+                  {String(active + 1).padStart(2, '0')} / {String(services.length).padStart(2, '0')}
+                </span>
+                <h3 className="text-3xl font-bold text-zinc-900 dark:text-white mb-4">{service.title}</h3>
+                <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed mb-6">
+                  {service.description}
+                </p>
+
+                <h4 className="text-xs font-semibold text-zinc-900 dark:text-white mb-3 uppercase tracking-wider">Vad vi erbjuder</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {service.features.map((feature) => (
+                    <div key={feature} className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                      <div className="w-1.5 h-1.5 bg-wmb-red rounded-full shrink-0" />
+                      {feature}
                     </div>
-
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-12 h-12 bg-wmb-blue/10 dark:bg-wmb-blue-dark/30 text-wmb-blue rounded-xl flex items-center justify-center">
-                        <service.icon size={26} />
-                      </div>
-                      <span className="text-xs font-semibold text-wmb-blue uppercase tracking-wider">
-                        {String(i + 1).padStart(2, '0')} / {String(services.length).padStart(2, '0')}
-                      </span>
-                    </div>
-
-                    <h3 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white mb-4">
-                      {service.title}
-                    </h3>
-
-                    <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed mb-6 text-base">
-                      {service.description}
-                    </p>
-
-                    <div className="flex flex-wrap gap-2">
-                      {service.features.map((feature) => (
-                        <span
-                          key={feature}
-                          className="px-3 py-1.5 text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-full"
-                        >
-                          {feature}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>
       </section>
+
+      <style jsx>{`
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.4s ease-out;
+        }
+      `}</style>
     </WithSkeleton>
+  )
+}
+
+export default function TjansterPage() {
+  return (
+    <Suspense fallback={<ServicesSkeleton />}>
+      <TjansterContent />
+    </Suspense>
   )
 }

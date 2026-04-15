@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import WithSkeleton from '@/components/WithSkeleton'
 import { ContactSkeleton } from '@/components/PageSkeleton'
 import { Phone, Mail, MapPin, Send, CheckCircle, Paperclip, X } from 'lucide-react'
 import { validateEmail, validateMobile, validateLandline } from '@/lib/validation'
+import { getContactInfo, telHref, mailHref, formatPhone, DEFAULT_CONTACT, type ContactInfo } from '@/lib/contact'
 
 const MAX_FILES = 5
 const MAX_FILE_SIZE = 10 * 1024 * 1024
@@ -23,6 +24,11 @@ export default function KontaktPage() {
   const [fileError, setFileError] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [contact, setContact] = useState<ContactInfo>(DEFAULT_CONTACT)
+
+  useEffect(() => {
+    getContactInfo().then(setContact)
+  }, [])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const validate = (): Record<string, string> => {
@@ -139,8 +145,8 @@ export default function KontaktPage() {
                     </div>
                     <div>
                       <p className="font-medium text-zinc-900 dark:text-white text-sm">Telefon</p>
-                      <a href="tel:+46707358181" className="text-zinc-600 dark:text-zinc-400 hover:text-wmb-red transition-colors">
-                        0707358181
+                      <a href={telHref(contact.phone)} className="text-zinc-600 dark:text-zinc-400 hover:text-wmb-red transition-colors">
+                        {formatPhone(contact.phone)}
                       </a>
                     </div>
                   </div>
@@ -151,8 +157,8 @@ export default function KontaktPage() {
                     </div>
                     <div>
                       <p className="font-medium text-zinc-900 dark:text-white text-sm">E-post</p>
-                      <a href="mailto:Tomas.wmb@telia.com" className="text-zinc-600 dark:text-zinc-400 hover:text-wmb-red transition-colors">
-                        Tomas.wmb@telia.com
+                      <a href={mailHref(contact.email)} className="text-zinc-600 dark:text-zinc-400 hover:text-wmb-red transition-colors">
+                        {contact.email}
                       </a>
                     </div>
                   </div>
@@ -163,7 +169,7 @@ export default function KontaktPage() {
                     </div>
                     <div>
                       <p className="font-medium text-zinc-900 dark:text-white text-sm">Adress</p>
-                      <p className="text-zinc-600 dark:text-zinc-400">Stockholm, Sverige</p>
+                      <p className="text-zinc-600 dark:text-zinc-400">{contact.address}</p>
                     </div>
                   </div>
                 </div>

@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation'
 export default function CTASection() {
   const pathname = usePathname()
 
-  if (pathname === '/kontakt') return null
+  if (pathname === '/kontakt' || pathname.startsWith('/admin')) return null
 
   return (
     <section className="py-20 sm:py-28">
