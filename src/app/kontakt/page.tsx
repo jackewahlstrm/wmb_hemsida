@@ -9,14 +9,14 @@ import { getContactInfo, telHref, mailHref, formatPhone, DEFAULT_CONTACT, type C
 
 const MAX_FILES = 5
 const MAX_FILE_SIZE = 10 * 1024 * 1024
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif', 'pdf', 'doc', 'docx']
 
 export default function KontaktPage() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
-    mobile: '',
-    landline: '',
+    phone: '',
     service: '',
     message: '',
   })
@@ -37,12 +37,8 @@ export default function KontaktPage() {
     if (!formData.lastName.trim()) errs.lastName = 'Efternamn krävs'
     if (!formData.email.trim()) errs.email = 'E-post krävs'
     else if (!validateEmail(formData.email)) errs.email = 'Ogiltig e-postadress'
-    if (!formData.mobile.trim() && !formData.landline.trim()) {
-      errs.mobile = 'Minst ett telefonnummer krävs'
-    } else {
-      if (formData.mobile.trim() && !validateMobile(formData.mobile)) errs.mobile = 'Ogiltigt mobilnummer (07X-XXX XX XX)'
-      if (formData.landline.trim() && !validateLandline(formData.landline)) errs.landline = 'Ogiltigt telefonnummer'
-    }
+    if (!formData.phone.trim()) errs.phone = 'Telefonnummer krävs'
+    else if (!validateMobile(formData.phone) && !validateLandline(formData.phone)) errs.phone = 'Ogiltigt telefonnummer'
     if (!formData.message.trim()) errs.message = 'Meddelande krävs'
     return errs
   }
@@ -60,8 +56,7 @@ export default function KontaktPage() {
       body.append('firstName', formData.firstName)
       body.append('lastName', formData.lastName)
       body.append('email', formData.email)
-      body.append('mobile', formData.mobile)
-      body.append('landline', formData.landline)
+      body.append('mobile', formData.phone)
       body.append('service', formData.service)
       body.append('message', formData.message)
       files.forEach((file) => body.append('files', file))
@@ -73,7 +68,7 @@ export default function KontaktPage() {
 
       if (res.ok) {
         setStatus('success')
-        setFormData({ firstName: '', lastName: '', email: '', mobile: '', landline: '', service: '', message: '' })
+        setFormData({ firstName: '', lastName: '', email: '', phone: '', service: '', message: '' })
         setFiles([])
         setErrors({})
       } else {
@@ -93,6 +88,15 @@ export default function KontaktPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFileError('')
     const selected = Array.from(e.target.files || [])
+    const invalid = selected.find((f) => {
+      const ext = f.name.split('.').pop()?.toLowerCase() || ''
+      return !ALLOWED_EXTENSIONS.includes(ext)
+    })
+    if (invalid) {
+      setFileError(`"${invalid.name}" stöds inte. Tillåtna format: ${ALLOWED_EXTENSIONS.map((e) => e.toUpperCase()).join(', ')}.`)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
     const tooLarge = selected.find((f) => f.size > MAX_FILE_SIZE)
     if (tooLarge) { setFileError(`"${tooLarge.name}" är för stor (max 10MB).`); return }
     if (files.length + selected.length > MAX_FILES) { setFileError(`Max ${MAX_FILES} filer.`); return }
@@ -211,19 +215,11 @@ export default function KontaktPage() {
                     {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div>
-                      <label htmlFor="mobile" className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">Mobil</label>
-                      <input type="tel" id="mobile" name="mobile" value={formData.mobile} onChange={handleChange} className={inputClass('mobile')} placeholder="07X-XXX XX XX" />
-                      {errors.mobile && <p className="text-red-500 text-xs mt-1">{errors.mobile}</p>}
-                    </div>
-                    <div>
-                      <label htmlFor="landline" className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">Telefon</label>
-                      <input type="tel" id="landline" name="landline" value={formData.landline} onChange={handleChange} className={inputClass('landline')} placeholder="08-XXX XXX" />
-                      {errors.landline && <p className="text-red-500 text-xs mt-1">{errors.landline}</p>}
-                    </div>
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">Telefon *</label>
+                    <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleChange} className={inputClass('phone')} placeholder="07X-XXX XX XX" />
+                    {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
                   </div>
-                  <p className="text-zinc-500 dark:text-zinc-400 text-xs -mt-4">Minst ett telefonnummer krävs</p>
 
                   <div>
                     <label htmlFor="service" className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">Tjänst</label>
@@ -249,12 +245,12 @@ export default function KontaktPage() {
                   {/* File upload */}
                   <div>
                     <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">Bifoga filer</label>
-                    <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf,.doc,.docx" onChange={handleFileChange} className="hidden" id="kontakt-file-upload" />
+                    <input ref={fileInputRef} type="file" multiple onChange={handleFileChange} className="hidden" id="kontakt-file-upload" />
                     <label htmlFor="kontakt-file-upload" className="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-600 dark:text-zinc-300 text-sm cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
                       <Paperclip size={16} />
                       Välj filer
                     </label>
-                    <span className="text-zinc-400 text-xs ml-3">Max {MAX_FILES} filer, 10MB/st (bilder, PDF, Word)</span>
+                    <span className="text-zinc-400 text-xs ml-3">Max {MAX_FILES} filer, 10MB/st</span>
 
                     {fileError && <p className="text-red-500 text-xs mt-1">{fileError}</p>}
 

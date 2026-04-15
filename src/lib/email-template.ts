@@ -1,3 +1,5 @@
+import { formatPhone } from './contact'
+
 interface ContactEmailProps {
   name: string
   email: string
@@ -8,6 +10,7 @@ interface ContactEmailProps {
 }
 
 export function generateContactEmail({ name, email, phone, service, message, attachmentNames }: ContactEmailProps): string {
+  const formattedPhone = phone ? formatPhone(phone) : ''
   return `
 <!DOCTYPE html>
 <html lang="sv">
@@ -23,21 +26,8 @@ export function generateContactEmail({ name, email, phone, service, message, att
 
           <!-- Header -->
           <tr>
-            <td style="background: linear-gradient(135deg, #eb4034, #c4342b); padding: 40px 40px 30px; border-radius: 16px 16px 0 0; text-align: center;">
-              <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
-                <tr>
-                  <td style="width: 48px; height: 48px; background-color: rgba(255,255,255,0.2); border-radius: 12px; text-align: center; vertical-align: middle;">
-                    <span style="color: white; font-weight: bold; font-size: 24px;">W</span>
-                  </td>
-                  <td style="padding-left: 12px;">
-                    <p style="margin: 0; color: white; font-weight: bold; font-size: 18px;">Wahlströms</p>
-                    <p style="margin: 0; color: rgba(255,255,255,0.8); font-size: 12px;">Måleri & Bygg</p>
-                  </td>
-                </tr>
-              </table>
-              <h1 style="margin: 24px 0 0; color: white; font-size: 22px; font-weight: 600;">
-                Ny kontaktförfrågan
-              </h1>
+            <td style="background-color: #eb4034; padding: 32px 40px; border-radius: 16px 16px 0 0; text-align: center;">
+              <img src="cid:wmb-logo" alt="Wahlströms Måleri & Bygg" width="140" style="display: block; margin: 0 auto; max-width: 140px; height: auto; border-radius: 8px;" />
             </td>
           </tr>
 
@@ -70,7 +60,7 @@ export function generateContactEmail({ name, email, phone, service, message, att
                       <tr>
                         <td style="padding: 8px 0; border-bottom: 1px solid #e4e4e7;">
                           <span style="color: #71717a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Telefon</span><br>
-                          <span style="color: #27272a; font-size: 15px; font-weight: 500;">${phone || 'Ej angivet'}</span>
+                          <span style="color: #27272a; font-size: 15px; font-weight: 500;">${formattedPhone || 'Ej angivet'}</span>
                         </td>
                       </tr>
                       <tr>
@@ -104,6 +94,7 @@ export function generateContactEmail({ name, email, phone, service, message, att
                     <p style="margin: 0 0 8px; color: #71717a; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Bifogade filer (${attachmentNames.length} st)</p>
                     <div style="background-color: #fafafa; border-radius: 12px; padding: 16px; border: 1px solid #e4e4e7;">
                       ${attachmentNames.map(n => `<p style="margin: 4px 0; color: #27272a; font-size: 14px;">📎 ${n}</p>`).join('')}
+                      <p style="margin: 12px 0 0; color: #71717a; font-size: 12px; font-style: italic;">Filerna finns bifogade i detta mejl — öppna eller ladda ner dem från mejlets bilage-sektion.</p>
                     </div>
                   </td>
                 </tr>
@@ -126,8 +117,8 @@ export function generateContactEmail({ name, email, phone, service, message, att
 
           <!-- Footer -->
           <tr>
-            <td style="background-color: #27272a; padding: 24px 40px; border-radius: 0 0 16px 16px; text-align: center;">
-              <p style="margin: 0; color: #a1a1aa; font-size: 13px;">
+            <td style="background-color: #072352; padding: 24px 40px; border-radius: 0 0 16px 16px; text-align: center;">
+              <p style="margin: 0; color: #a1a1d0; font-size: 13px;">
                 Detta mejl skickades automatiskt från wahlstromsmaleri.se
               </p>
             </td>

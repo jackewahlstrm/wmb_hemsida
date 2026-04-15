@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { readFile } from 'fs/promises'
+import path from 'path'
 import { supabase } from '@/lib/supabase'
 import { generateContactEmail } from '@/lib/email-template'
 import { validateEmail, validateMobile, validateLandline } from '@/lib/validation'
@@ -11,7 +13,7 @@ export async function POST(request: NextRequest) {
     const contentType = request.headers.get('content-type') || ''
     let firstName: string, lastName: string, email: string, mobile: string, landline: string, service: string, message: string
     let attachmentNames: string[] = []
-    let attachments: { filename: string; content: Buffer }[] = []
+    const attachments: { filename: string; content: Buffer; contentId?: string }[] = []
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData()
@@ -70,6 +72,15 @@ export async function POST(request: NextRequest) {
       if (dbError) {
         console.error('Database error:', dbError)
       }
+    }
+
+    // Lägg till loggan som inline attachment (refereras med cid:wmb-logo i HTML)
+    try {
+      const logoPath = path.join(process.cwd(), 'public', 'wmb_logo_real.webp')
+      const logoBuffer = await readFile(logoPath)
+      attachments.push({ filename: 'wmb_logo_real.webp', content: logoBuffer, contentId: 'wmb-logo' })
+    } catch (e) {
+      console.error('Kunde inte läsa logga:', e)
     }
 
     // Send email via Resend
