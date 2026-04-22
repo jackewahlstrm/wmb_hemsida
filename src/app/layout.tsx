@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CTASection from "@/components/CTASection";
 import ScrollToTop from "@/components/ScrollToTop";
+import VisitorTracker from "@/components/VisitorTracker";
 // import LoadingScreen from "@/components/LoadingScreen";
 
 const inter = Inter({
@@ -29,6 +30,7 @@ export default function RootLayout({
         <ThemeProvider>
           {/* <LoadingScreen> */}
             <ScrollToTop />
+            <VisitorTracker />
             <Navbar />
             <main className="min-h-screen pt-20 sm:pt-26">
               {children}

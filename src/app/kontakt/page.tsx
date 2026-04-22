@@ -3,7 +3,24 @@
 import { useState, useRef, useEffect } from 'react'
 import WithSkeleton from '@/components/WithSkeleton'
 import { ContactSkeleton } from '@/components/PageSkeleton'
-import { Phone, Mail, MapPin, Send, CheckCircle, Paperclip, X } from 'lucide-react'
+import { Phone, Mail, MapPin, CheckCircle, Paperclip, X, ArrowRight } from 'lucide-react'
+import CustomSelect from '@/components/CustomSelect'
+
+const SERVICE_OPTIONS = [
+  { value: 'Invändig målning', label: 'Invändig målning' },
+  { value: 'Utvändig målning', label: 'Utvändig målning' },
+  { value: 'Spackling', label: 'Spackling' },
+  { value: 'Tapetsering', label: 'Tapetsering' },
+  { value: 'Fasadrenovering', label: 'Fasadrenovering' },
+  { value: 'Byggtjänster', label: 'Byggtjänster' },
+  { value: 'Lackering', label: 'Lackering' },
+  { value: 'Färgsättning & rådgivning', label: 'Färgsättning & rådgivning' },
+  { value: 'Underhåll', label: 'Underhåll' },
+  { value: 'Projektledning', label: 'Projektledning' },
+  { value: 'Dekorationsmålning', label: 'Dekorationsmålning' },
+  { value: 'Epoxymålning', label: 'Epoxymålning' },
+  { value: 'Annat', label: 'Annat' },
+]
 import { validateEmail, validateMobile, validateLandline } from '@/lib/validation'
 import { getContactInfo, telHref, mailHref, formatPhone, DEFAULT_CONTACT, type ContactInfo } from '@/lib/contact'
 
@@ -223,17 +240,14 @@ export default function KontaktPage() {
 
                   <div>
                     <label htmlFor="service" className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">Tjänst</label>
-                    <select id="service" name="service" value={formData.service} onChange={handleChange} className="w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-wmb-blue focus:border-transparent transition-all">
-                      <option value="">Välj tjänst</option>
-                      <option value="Invändig målning">Invändig målning</option>
-                      <option value="Utvändig målning">Utvändig målning</option>
-                      <option value="Spackling">Spackling</option>
-                      <option value="Tapetsering">Tapetsering</option>
-                      <option value="Fasadrenovering">Fasadrenovering</option>
-                      <option value="Byggtjänster">Byggtjänster</option>
-                      <option value="Lackering">Lackering</option>
-                      <option value="Annat">Annat</option>
-                    </select>
+                    <CustomSelect
+                      id="service"
+                      name="service"
+                      value={formData.service}
+                      onChange={(val) => setFormData((prev) => ({ ...prev, service: val }))}
+                      options={SERVICE_OPTIONS}
+                      placeholder="Välj tjänst"
+                    />
                   </div>
 
                   <div>
@@ -246,9 +260,15 @@ export default function KontaktPage() {
                   <div>
                     <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-2">Bifoga filer</label>
                     <input ref={fileInputRef} type="file" multiple onChange={handleFileChange} className="hidden" id="kontakt-file-upload" />
-                    <label htmlFor="kontakt-file-upload" className="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xl text-zinc-600 dark:text-zinc-300 text-sm cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-                      <Paperclip size={16} />
-                      Välj filer
+                    <label
+                      htmlFor="kontakt-file-upload"
+                      className="relative inline-flex items-center gap-2 px-4 py-2.5 text-zinc-600 dark:text-zinc-200 text-sm font-medium overflow-hidden rounded-lg border border-zinc-300 dark:border-zinc-600 cursor-pointer transition-all duration-300 hover:scale-105 group"
+                      style={{ backgroundColor: '#ffffff' }}
+                    >
+                      <span className="absolute inset-x-0 top-0 h-1.5 z-10 rounded-t-lg scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" style={{ backgroundColor: '#d6190c' }} />
+                      <span className="absolute inset-x-0 bottom-0 h-1.5 z-10 rounded-b-lg scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right" style={{ backgroundColor: '#0d237d' }} />
+                      <Paperclip size={16} className="relative z-10" />
+                      <span className="relative z-10">Välj filer</span>
                     </label>
                     <span className="text-zinc-400 text-xs ml-3">Max {MAX_FILES} filer, 10MB/st</span>
 
@@ -276,16 +296,23 @@ export default function KontaktPage() {
                     </div>
                   )}
 
-                  <button type="submit" disabled={status === 'loading'} className="inline-flex items-center gap-2 px-8 py-4 bg-wmb-red hover:bg-wmb-red/90 disabled:bg-wmb-red/50 text-white font-semibold rounded-xl transition-all hover:scale-105 disabled:hover:scale-100">
+                  <button
+                    type="submit"
+                    disabled={status === 'loading'}
+                    className="relative inline-flex items-center gap-2 px-8 py-4 text-zinc-600 dark:text-zinc-200 font-semibold overflow-hidden rounded-lg border border-zinc-300 dark:border-zinc-600 transition-all duration-300 hover:scale-105 disabled:hover:scale-100 disabled:opacity-60 group"
+                    style={{ backgroundColor: '#ffffff' }}
+                  >
+                    <span className="absolute inset-x-0 top-0 h-1.5 z-10 rounded-t-lg scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" style={{ backgroundColor: '#d6190c' }} />
+                    <span className="absolute inset-x-0 bottom-0 h-1.5 z-10 rounded-b-lg scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right" style={{ backgroundColor: '#0d237d' }} />
                     {status === 'loading' ? (
                       <>
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Skickar...
+                        <div className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-600 rounded-full animate-spin relative z-10" />
+                        <span className="relative z-10">Skickar...</span>
                       </>
                     ) : (
                       <>
-                        <Send size={18} />
-                        Skicka meddelande
+                        <span className="relative z-10">Skicka meddelande</span>
+                        <ArrowRight size={18} className="relative z-10" />
                       </>
                     )}
                   </button>

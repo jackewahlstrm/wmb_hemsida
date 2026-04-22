@@ -19,18 +19,21 @@ const featuredServices = [
     title: 'Invändig målning',
     description: 'Professionell invändig målning för hem och kontor med högkvalitativa färger.',
     slug: 'invandig-malning',
+    image: '/bluehouse_wmb.webp',
   },
   {
     icon: SprayCan,
     title: 'Lackering',
     description: 'Professionell lackering av möbler, snickerier och andra ytor.',
     slug: 'lackering',
+    image: null,
   },
   {
     icon: Droplets,
     title: 'Epoxymålning',
     description: 'Tåliga epoxygolv och ytor för garage, industri och kommersiella lokaler.',
     slug: 'epoxymalning',
+    image: '/epoxy.jpg',
   },
 ]
 
@@ -77,7 +80,7 @@ export default function Home() {
                   href="/kontakt"
                   className="inline-flex items-center gap-2 px-8 py-4 bg-wmb-red hover:bg-wmb-red/90 text-white font-semibold rounded-xl transition-all"
                 >
-                  Begär offert
+                  Kontakta oss
                   <ArrowRight size={18} />
                 </Link>
               </div>
@@ -115,12 +118,20 @@ export default function Home() {
               >
                 {/* Bild */}
                 <div className="relative h-52 overflow-hidden">
-                  <div className="w-full h-full bg-zinc-200 dark:bg-zinc-800">
-                    <div className="absolute inset-0 bg-gradient-to-br from-wmb-red/10 via-transparent to-wmb-blue/10" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-zinc-400 dark:text-zinc-600 text-sm">Bild kommer</span>
+                  {service.image ? (
+                    <img
+                      src={service.image}
+                      alt={service.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover/svc:scale-105"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-zinc-200 dark:bg-zinc-800">
+                      <div className="absolute inset-0 bg-gradient-to-br from-wmb-red/10 via-transparent to-wmb-blue/10" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-zinc-400 dark:text-zinc-600 text-sm">Bild kommer</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <div className="absolute bottom-4 left-4 flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">

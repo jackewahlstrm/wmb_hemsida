@@ -12,7 +12,11 @@ const values = [
   { icon: Target, title: 'Precision', description: 'Detaljer gör skillnaden.' },
 ]
 
-const clients = ['Företag 1', 'Företag 2', 'Företag 3', 'Företag 4', 'Företag 5', 'Företag 6']
+const clients = [
+  { name: 'AL', src: '/al_logotyp_rgb_svart.webp' },
+  { name: 'TL Bygg', src: '/tlbygg_logo_positiv_svart_rgb_200x155px.webp' },
+  { name: 'Hellströms', src: '/cropped-logotyp-hellstroms_orignal.webp' },
+]
 
 function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -155,29 +159,32 @@ export default function OmOssPage() {
         </div>
       </SplitSection>
 
-      {/* VD (bild höger) */}
+      {/* Kunder (bild höger) */}
       <SplitSection
-        imageSrc="/tomas_wmb.webp"
+        imageSrc={null}
         imageOnLeft={false}
-        eyebrow="VD & Grundare"
-        title="Tomas Wahlström"
+        eyebrow="Kända kunder"
+        title="Företag som litar på oss"
         bgClass="bg-zinc-50 dark:bg-zinc-900/50"
       >
         <p>
-          Tomas, född 1967, har hantverket i blodet. Efter utbildning på Västberga gymnasium
-          började han arbeta i branschen redan 1983 — bara 16 år gammal. Sex år senare, 1989,
-          startade han eget som 21-åring, efter att en kund uttryckligen velat fortsätta
-          jobba med honom.
+          Genom åren har vi haft förmånen att samarbeta med både privatpersoner och välkända
+          företag i Stockholmsregionen. Vårt rykte bygger på varje uppdrag vi levererar.
         </p>
-        <blockquote className="border-l-4 border-wmb-red pl-5 py-2 italic text-zinc-700 dark:text-zinc-300 my-6">
-          &ldquo;Jag tror på att göra saker rätt från början. Det handlar inte bara om att måla en
-          vägg — det handlar om att skapa en miljö där människor trivs.&rdquo;
-        </blockquote>
-        <p>
-          Med över fyra decenniers erfarenhet inom måleri och bygg är Tomas hjärnan och själen
-          bakom företaget. När han inte leder teamet spenderar han gärna tiden på ishockeyn —
-          en passion sedan barnsben, både som spelare och supporter.
-        </p>
+        <div className="grid grid-cols-3 gap-3 pt-4">
+          {clients.map((client) => (
+            <div
+              key={client.name}
+              className="h-24 bg-white rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-center p-4"
+            >
+              <img
+                src={client.src}
+                alt={client.name}
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
+          ))}
+        </div>
       </SplitSection>
 
       {/* Värderingar (bild vänster) */}
@@ -207,29 +214,6 @@ export default function OmOssPage() {
         </div>
       </SplitSection>
 
-      {/* Kunder (bild höger) */}
-      <SplitSection
-        imageSrc={null}
-        imageOnLeft={false}
-        eyebrow="Kända kunder"
-        title="Företag som litar på oss"
-        bgClass="bg-zinc-50 dark:bg-zinc-900/50"
-      >
-        <p>
-          Genom åren har vi haft förmånen att samarbeta med både privatpersoner och välkända
-          företag i Stockholmsregionen. Vårt rykte bygger på varje uppdrag vi levererar.
-        </p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-4">
-          {clients.map((client) => (
-            <div
-              key={client}
-              className="h-20 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 flex items-center justify-center"
-            >
-              <span className="text-zinc-400 dark:text-zinc-500 text-xs font-medium">{client}</span>
-            </div>
-          ))}
-        </div>
-      </SplitSection>
     </WithSkeleton>
   )
 }

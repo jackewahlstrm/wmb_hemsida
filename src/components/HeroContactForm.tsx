@@ -164,7 +164,7 @@ export default function HeroContactForm() {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 sm:p-8 space-y-4">
-      <h3 className="text-lg font-bold text-white mb-1">Begär offert</h3>
+      <h3 className="text-lg font-bold text-white mb-1">Kontakta oss</h3>
       <p className="text-zinc-400 text-sm mb-4">Fyll i formuläret så återkommer vi snabbt.</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

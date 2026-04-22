@@ -24,7 +24,7 @@ export default function CTASection() {
         >
           <span className="absolute inset-x-0 top-0 h-1.5 z-10 rounded-t-lg scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" style={{ backgroundColor: '#d6190c' }} />
           <span className="absolute inset-x-0 bottom-0 h-1.5 z-10 rounded-b-lg scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right" style={{ backgroundColor: '#0d237d' }} />
-          <span className="relative z-10">Begär offert</span>
+          <span className="relative z-10">Kontakta oss</span>
           <ArrowRight size={18} className="relative z-10" />
         </Link>
       </div>

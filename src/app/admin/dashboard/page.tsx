@@ -17,6 +17,17 @@ import {
   Pencil,
   ArrowUp,
   ArrowDown,
+  Type,
+  Server,
+  Database,
+  Cloud,
+  Mail,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  RefreshCw,
+  Inbox,
+  Eye,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { uploadImage } from '@/lib/cloudinary'
@@ -74,7 +85,7 @@ export default function AdminDashboard() {
   const tabs = [
     { id: 'overview' as Tab, label: 'Översikt', icon: LayoutDashboard },
     { id: 'projects' as Tab, label: 'Bilder', icon: ImageIcon },
-    { id: 'clients' as Tab, label: 'Kunder', icon: Users },
+    { id: 'clients' as Tab, label: 'Text', icon: Type },
     { id: 'settings' as Tab, label: 'Kontaktuppgifter', icon: Settings },
   ]
 
@@ -115,7 +126,7 @@ export default function AdminDashboard() {
 
       {/* Tab Content */}
       {activeTab === 'overview' && (
-        <OverviewTab projects={projects} clients={clients} />
+        <OverviewTab projects={projects} />
       )}
       {activeTab === 'projects' && (
         <ProjectsTab projects={projects} setProjects={setProjects} onReload={loadData} />
@@ -131,22 +142,302 @@ export default function AdminDashboard() {
 }
 
 /* ==================== OVERVIEW ==================== */
-function OverviewTab({ projects, clients }: { projects: Project[]; clients: ClientType[] }) {
+type HealthCheck = {
+  status: 'ok' | 'error' | 'warning'
+  label: string
+  latencyMs?: number
+}
+
+type HealthResponse = {
+  server: HealthCheck
+  database: HealthCheck
+  cloudinary: HealthCheck
+  email: HealthCheck
+  checkedAt: string
+}
+
+type RangeKey = 'day' | 'week' | 'month' | 'year' | 'total'
+
+const RANGE_OPTIONS: Record<RangeKey, { label: string; sublabel: string }> = {
+  day: { label: 'Dag', sublabel: 'idag' },
+  week: { label: 'Vecka', sublabel: 'denna vecka' },
+  month: { label: 'Månad', sublabel: 'denna månad' },
+  year: { label: 'År', sublabel: 'i år' },
+  total: { label: 'Totalt', sublabel: 'totalt' },
+}
+
+// Returnerar ISO-timestamp för början av perioden i Stockholm-tid.
+// Veckan börjar måndag 00:00 lokal tid. Returnerar null för 'total'.
+function startOfRangeISO(range: RangeKey): string | null {
+  if (range === 'total') return null
+  const now = new Date()
+
+  const parts: Record<string, string> = {}
+  for (const p of new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Stockholm',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    weekday: 'short',
+  }).formatToParts(now)) {
+    if (p.type !== 'literal') parts[p.type] = p.value
+  }
+
+  let y = +parts.year
+  let m = +parts.month
+  let d = +parts.day
+  const weekdayMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
+  const dow = weekdayMap[parts.weekday] ?? 0
+
+  if (range === 'week') {
+    const diff = dow === 0 ? -6 : 1 - dow
+    const tmp = new Date(Date.UTC(y, m - 1, d + diff))
+    y = tmp.getUTCFullYear()
+    m = tmp.getUTCMonth() + 1
+    d = tmp.getUTCDate()
+  } else if (range === 'month') {
+    d = 1
+  } else if (range === 'year') {
+    m = 1
+    d = 1
+  }
+
+  // Hämta aktuell Stockholm-UTC-offset (varierar med sommartid)
+  const offsetParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Stockholm',
+    timeZoneName: 'longOffset',
+  }).formatToParts(now)
+  const tzName = offsetParts.find((p) => p.type === 'timeZoneName')?.value ?? 'GMT+01:00'
+  const offset = tzName.replace('GMT', '') || '+01:00'
+
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${y}-${pad(m)}-${pad(d)}T00:00:00${offset}`
+}
+
+async function countRows(table: string, startISO: string | null): Promise<number> {
+  const query = supabase.from(table).select('*', { count: 'exact', head: true })
+  if (startISO) query.gte('created_at', startISO)
+  const { count, error } = await query
+  if (error) throw error
+  return count ?? 0
+}
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  range,
+  ranges,
+  onRangeChange,
+}: {
+  icon: typeof Server
+  label: string
+  value: number | string
+  range: RangeKey
+  ranges: RangeKey[]
+  onRangeChange: (r: RangeKey) => void
+}) {
+  const sub = RANGE_OPTIONS[range]?.sublabel ?? ''
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {[
-        { label: 'Bilder', value: new Set(projects.map((p) => p.images?.[0] || p.title)).size, icon: ImageIcon },
-        { label: 'Kunder', value: clients.length, icon: Users },
-        { label: 'Status', value: 'Aktiv', icon: LayoutDashboard },
-      ].map((stat) => (
-        <div key={stat.label} className="p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
-          <div className="flex items-center gap-3 mb-2">
-            <stat.icon size={20} className="text-wmb-blue" />
-            <span className="text-sm text-zinc-500 dark:text-zinc-400">{stat.label}</span>
+    <div className="p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-wmb-blue/10 flex items-center justify-center">
+            <Icon size={18} className="text-wmb-blue" />
           </div>
-          <p className="text-2xl font-bold text-zinc-900 dark:text-white">{stat.value}</p>
+          <span className="text-sm font-medium text-zinc-600 dark:text-zinc-300">{label}</span>
         </div>
-      ))}
+        <div className="inline-flex p-0.5 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+          {ranges.map((key) => (
+            <button
+              key={key}
+              onClick={() => onRangeChange(key)}
+              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
+                range === key
+                  ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-sm'
+                  : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200'
+              }`}
+            >
+              {RANGE_OPTIONS[key].label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <p className="text-3xl font-bold text-zinc-900 dark:text-white tabular-nums">{value}</p>
+      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{sub}</p>
+    </div>
+  )
+}
+
+function OverviewTab({ projects }: { projects: Project[] }) {
+  const [health, setHealth] = useState<HealthResponse | null>(null)
+  const [checking, setChecking] = useState(true)
+  const [contactRange, setContactRange] = useState<RangeKey>('week')
+  const [visitorRange, setVisitorRange] = useState<RangeKey>('week')
+  const [contactCount, setContactCount] = useState<number | null>(null)
+  const [visitorCount, setVisitorCount] = useState<number | null>(null)
+  const imageCount = new Set(projects.map((p) => p.images?.[0] || p.title)).size
+
+  useEffect(() => {
+    setContactCount(null)
+    countRows('contact_messages', startOfRangeISO(contactRange))
+      .then(setContactCount)
+      .catch(() => setContactCount(null))
+  }, [contactRange])
+
+  useEffect(() => {
+    setVisitorCount(null)
+    countRows('page_views', startOfRangeISO(visitorRange))
+      .then(setVisitorCount)
+      .catch(() => setVisitorCount(null))
+  }, [visitorRange])
+
+  const runChecks = async () => {
+    setChecking(true)
+    try {
+      const res = await fetch('/api/health', { cache: 'no-store' })
+      const data = (await res.json()) as HealthResponse
+      setHealth(data)
+    } catch {
+      setHealth(null)
+    }
+    setChecking(false)
+  }
+
+  useEffect(() => {
+    runChecks()
+  }, [])
+
+  const allOk = health
+    ? [health.server, health.database, health.cloudinary, health.email].every((c) => c.status === 'ok')
+    : false
+
+  const services: { key: keyof Omit<HealthResponse, 'checkedAt'>; label: string; icon: typeof Server; description: string }[] = [
+    { key: 'server', label: 'Server', icon: Server, description: 'Next.js-applikation' },
+    { key: 'database', label: 'Databas', icon: Database, description: 'Supabase' },
+    { key: 'cloudinary', label: 'Bildlagring', icon: Cloud, description: 'Cloudinary' },
+    { key: 'email', label: 'E-post', icon: Mail, description: 'Resend' },
+  ]
+
+  return (
+    <div className="space-y-6">
+      {/* Top row — bilder + samlad status */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center gap-3 mb-2">
+            <ImageIcon size={20} className="text-wmb-blue" />
+            <span className="text-sm text-zinc-500 dark:text-zinc-400">Bilder</span>
+          </div>
+          <p className="text-2xl font-bold text-zinc-900 dark:text-white">{imageCount}</p>
+        </div>
+
+        <div className="p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center gap-3 mb-2">
+            <LayoutDashboard size={20} className="text-wmb-blue" />
+            <span className="text-sm text-zinc-500 dark:text-zinc-400">Systemstatus</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {checking ? (
+              <>
+                <RefreshCw size={18} className="text-zinc-400 animate-spin" />
+                <p className="text-2xl font-bold text-zinc-500 dark:text-zinc-400">Kontrollerar...</p>
+              </>
+            ) : allOk ? (
+              <>
+                <CheckCircle2 size={22} className="text-green-500" />
+                <p className="text-2xl font-bold text-green-500">Allt fungerar</p>
+              </>
+            ) : (
+              <>
+                <AlertTriangle size={22} className="text-amber-500" />
+                <p className="text-2xl font-bold text-amber-500">Något behöver ses över</p>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Kontaktförfrågningar + Besökare */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <StatCard
+          icon={Inbox}
+          label="Kontaktförfrågningar"
+          value={contactCount === null ? '—' : contactCount.toLocaleString('sv-SE')}
+          range={contactRange}
+          ranges={['week', 'month', 'year', 'total']}
+          onRangeChange={setContactRange}
+        />
+        <StatCard
+          icon={Eye}
+          label="Besökare"
+          value={visitorCount === null ? '—' : visitorCount.toLocaleString('sv-SE')}
+          range={visitorRange}
+          ranges={['day', 'week', 'month', 'year', 'total']}
+          onRangeChange={setVisitorRange}
+        />
+      </div>
+
+      {/* Service-status */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-wider">Tjänster</h3>
+          <div className="flex items-center gap-3">
+            {health?.checkedAt && (
+              <span className="text-xs text-zinc-400">
+                Senast kontrollerad {new Date(health.checkedAt).toLocaleTimeString('sv-SE')}
+              </span>
+            )}
+            <button
+              onClick={runChecks}
+              disabled={checking}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <RefreshCw size={12} className={checking ? 'animate-spin' : ''} />
+              Kontrollera igen
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {services.map((service) => {
+            const check = health?.[service.key]
+            const status = check?.status ?? (checking ? 'checking' : 'error')
+            const statusConfig = {
+              ok: { color: 'text-green-500', bg: 'bg-green-500/10', Icon: CheckCircle2, label: 'Online' },
+              warning: { color: 'text-amber-500', bg: 'bg-amber-500/10', Icon: AlertTriangle, label: 'Varning' },
+              error: { color: 'text-red-500', bg: 'bg-red-500/10', Icon: XCircle, label: 'Nere' },
+              checking: { color: 'text-zinc-400', bg: 'bg-zinc-500/10', Icon: RefreshCw, label: 'Kontrollerar' },
+            }[status]
+
+            return (
+              <div
+                key={service.key}
+                className="p-5 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 flex items-center gap-4"
+              >
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${statusConfig.bg}`}>
+                  <service.icon size={20} className={statusConfig.color} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-semibold text-zinc-900 dark:text-white text-sm">{service.label}</h4>
+                    <span className="text-xs text-zinc-400">•</span>
+                    <span className="text-xs text-zinc-500 dark:text-zinc-400">{service.description}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <statusConfig.Icon size={14} className={`${statusConfig.color} ${status === 'checking' ? 'animate-spin' : ''}`} />
+                    <span className={`text-xs font-medium ${statusConfig.color}`}>
+                      {check?.label ?? statusConfig.label}
+                    </span>
+                    {check?.latencyMs !== undefined && (
+                      <span className="text-xs text-zinc-400 font-mono">{check.latencyMs}ms</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }

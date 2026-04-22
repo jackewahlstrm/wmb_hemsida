@@ -37,7 +37,7 @@ const services = [
     title: 'Tapetsering',
     description: 'Professionell tapetsering med precision och noggrannhet. Vi hjälper dig välja rätt tapet för ditt rum.',
     features: ['Tapetborttagning', 'Uppsättning', 'Mönsterpassning', 'Specialtapeter'],
-    image: null,
+    image: '/tapetsering.jpg',
   },
   {
     slug: 'fasadrenovering',
@@ -101,7 +101,7 @@ const services = [
     title: 'Epoxymålning',
     description: 'Tåliga och hållbara epoxygolv och ytor för garage, industri och kommersiella lokaler.',
     features: ['Garagegolv', 'Industrigolv', 'Våtrum', 'Betongytor'],
-    image: null,
+    image: '/epoxy.jpg',
   },
 ]
 
