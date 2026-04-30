@@ -17,7 +17,7 @@ import {
   Pencil,
   ArrowUp,
   ArrowDown,
-  Type,
+  Handshake,
   Server,
   Database,
   Cloud,
@@ -85,7 +85,7 @@ export default function AdminDashboard() {
   const tabs = [
     { id: 'overview' as Tab, label: 'Översikt', icon: LayoutDashboard },
     { id: 'projects' as Tab, label: 'Bilder', icon: ImageIcon },
-    { id: 'clients' as Tab, label: 'Text', icon: Type },
+    { id: 'clients' as Tab, label: 'Samarbeten', icon: Handshake },
     { id: 'settings' as Tab, label: 'Kontaktuppgifter', icon: Settings },
   ]
 
@@ -222,6 +222,70 @@ async function countRows(table: string, startISO: string | null): Promise<number
   return count ?? 0
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
+}
+
+function UsageCard({
+  icon: Icon,
+  label,
+  description,
+  used,
+  limit,
+  formatValue,
+  notConfiguredMessage,
+}: {
+  icon: typeof Server
+  label: string
+  description: string
+  used: number | null
+  limit: number
+  formatValue: (n: number) => string
+  notConfiguredMessage?: string | null
+}) {
+  const pct = used !== null ? Math.min(100, (used / limit) * 100) : 0
+  const barColor = pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-amber-500' : 'bg-wmb-blue'
+
+  return (
+    <div className="p-6 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-xl bg-wmb-blue/10 flex items-center justify-center shrink-0">
+          <Icon size={18} className="text-wmb-blue" />
+        </div>
+        <div className="min-w-0">
+          <h4 className="text-sm font-semibold text-zinc-900 dark:text-white">{label}</h4>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">{description}</p>
+        </div>
+      </div>
+
+      {notConfiguredMessage ? (
+        <p className="text-xs text-amber-500 mt-2 leading-relaxed">{notConfiguredMessage}</p>
+      ) : (
+        <>
+          <div className="flex items-baseline gap-2 mb-2">
+            <span className="text-2xl font-bold text-zinc-900 dark:text-white tabular-nums">
+              {used === null ? '—' : formatValue(used)}
+            </span>
+            <span className="text-sm text-zinc-500 dark:text-zinc-400">/ {formatValue(limit)}</span>
+          </div>
+          <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+            <div
+              className={`h-full ${barColor} transition-all duration-500`}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">
+            {used === null ? 'Hämtar...' : `${pct.toFixed(0)}% använt`}
+          </p>
+        </>
+      )}
+    </div>
+  )
+}
+
 function StatCard({
   icon: Icon,
   label,
@@ -276,6 +340,13 @@ function OverviewTab({ projects }: { projects: Project[] }) {
   const [visitorRange, setVisitorRange] = useState<RangeKey>('week')
   const [contactCount, setContactCount] = useState<number | null>(null)
   const [visitorCount, setVisitorCount] = useState<number | null>(null)
+  const [emailUsage, setEmailUsage] = useState<number | null>(null)
+  const [cloudinaryUsage, setCloudinaryUsage] = useState<{
+    configured: boolean
+    used: number
+    limit: number
+    plan?: string
+  } | null>(null)
   const imageCount = new Set(projects.map((p) => p.images?.[0] || p.title)).size
 
   useEffect(() => {
@@ -291,6 +362,28 @@ function OverviewTab({ projects }: { projects: Project[] }) {
       .then(setVisitorCount)
       .catch(() => setVisitorCount(null))
   }, [visitorRange])
+
+  useEffect(() => {
+    countRows('contact_messages', startOfRangeISO('month'))
+      .then(setEmailUsage)
+      .catch(() => setEmailUsage(null))
+
+    fetch('/api/usage', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.configured) {
+          setCloudinaryUsage({ configured: false, used: 0, limit: 25 * 1024 * 1024 * 1024 })
+        } else {
+          setCloudinaryUsage({
+            configured: true,
+            used: data.storageUsedBytes ?? 0,
+            limit: data.storageLimitBytes ?? 25 * 1024 * 1024 * 1024,
+            plan: data.plan,
+          })
+        }
+      })
+      .catch(() => setCloudinaryUsage(null))
+  }, [])
 
   const runChecks = async () => {
     setChecking(true)
@@ -375,6 +468,34 @@ function OverviewTab({ projects }: { projects: Project[] }) {
           ranges={['day', 'week', 'month', 'year', 'total']}
           onRangeChange={setVisitorRange}
         />
+      </div>
+
+      {/* Användning */}
+      <div>
+        <h3 className="text-sm font-semibold text-zinc-900 dark:text-white uppercase tracking-wider mb-3">Användning</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <UsageCard
+            icon={Mail}
+            label="E-post"
+            description="Resend · denna månad"
+            used={emailUsage}
+            limit={3000}
+            formatValue={(n) => `${n.toLocaleString('sv-SE')} mejl`}
+          />
+          <UsageCard
+            icon={Cloud}
+            label="Bildlagring"
+            description={`Cloudinary${cloudinaryUsage?.plan ? ` · ${cloudinaryUsage.plan}` : ''}`}
+            used={cloudinaryUsage?.configured ? cloudinaryUsage.used : null}
+            limit={cloudinaryUsage?.limit ?? 25 * 1024 * 1024 * 1024}
+            formatValue={formatBytes}
+            notConfiguredMessage={
+              cloudinaryUsage && !cloudinaryUsage.configured
+                ? 'Lägg till CLOUDINARY_API_KEY och CLOUDINARY_API_SECRET i .env.local för att se användning. Värdena finns i Cloudinary-dashboarden under Settings → API Keys.'
+                : null
+            }
+          />
+        </div>
       </div>
 
       {/* Service-status */}
@@ -990,7 +1111,7 @@ function ClientsTab({
   }
 
   const deleteClient = async (id: string) => {
-    if (!confirm('Är du säker på att du vill ta bort denna kund?')) return
+    if (!confirm('Är du säker på att du vill ta bort detta samarbete?')) return
     await supabase.from('clients').delete().eq('id', id)
     setClients(clients.filter((c) => c.id !== id))
   }
@@ -998,26 +1119,26 @@ function ClientsTab({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Kunder</h2>
+        <h2 className="text-lg font-bold text-zinc-900 dark:text-white">Samarbeten</h2>
         <button
           onClick={() => setShowForm(!showForm)}
           className="inline-flex items-center gap-2 px-4 py-2 bg-wmb-red hover:bg-wmb-red/90 text-white text-sm font-medium rounded-lg transition-colors"
         >
           {showForm ? <X size={18} /> : <Plus size={18} />}
-          {showForm ? 'Avbryt' : 'Ny kund'}
+          {showForm ? 'Avbryt' : 'Nytt samarbete'}
         </button>
       </div>
 
       {showForm && (
         <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-1">Kundnamn *</label>
+            <label className="block text-sm font-medium text-zinc-900 dark:text-white mb-1">Företagsnamn *</label>
             <input
               type="text"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-wmb-blue"
-              placeholder="Företagets namn"
+              placeholder="t.ex. Alcro"
             />
           </div>
           <div>
@@ -1027,7 +1148,7 @@ function ClientsTab({
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-wmb-blue"
-              placeholder="Kort beskrivning (valfritt)"
+              placeholder="Kort beskrivning av samarbetet (valfritt)"
             />
           </div>
           <div>
@@ -1066,15 +1187,15 @@ function ClientsTab({
             className="inline-flex items-center gap-2 px-6 py-2 bg-wmb-red hover:bg-wmb-red/90 disabled:bg-wmb-red/50 text-white text-sm font-medium rounded-lg transition-colors"
           >
             <Save size={16} />
-            {saving ? 'Sparar...' : 'Spara kund'}
+            {saving ? 'Sparar...' : 'Spara samarbete'}
           </button>
         </div>
       )}
 
       {clients.length === 0 ? (
         <div className="text-center py-12 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800">
-          <Users size={40} className="text-zinc-300 dark:text-zinc-600 mx-auto mb-3" />
-          <p className="text-zinc-500 dark:text-zinc-400">Inga kunder ännu. Lägg till din första kund ovan.</p>
+          <Handshake size={40} className="text-zinc-300 dark:text-zinc-600 mx-auto mb-3" />
+          <p className="text-zinc-500 dark:text-zinc-400">Inga samarbeten ännu. Lägg till ditt första samarbete ovan.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
