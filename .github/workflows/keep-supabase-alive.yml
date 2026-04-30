@@ -1,0 +1,31 @@
+name: Keep Supabase Alive
+
+# Supabase Free pausar projekt efter 7 dagars inaktivitet.
+# Denna workflow pingar databasen dagligen så projektet förblir aktivt.
+
+on:
+  schedule:
+    # 06:00 UTC varje dag (07:00 vintertid / 08:00 sommartid i Sverige)
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          response=$(curl -sS -o /tmp/body -w "%{http_code}" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/projects?select=id&limit=1")
+          echo "HTTP $response"
+          cat /tmp/body
+          if [ "$response" != "200" ]; then
+            echo "Ping misslyckades med HTTP $response"
+            exit 1
+          fi
+          echo "Supabase är vid liv."
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
