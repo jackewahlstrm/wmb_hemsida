@@ -3,8 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
-import { Menu, X, Sun, Moon } from 'lucide-react'
-import { useTheme } from '@/lib/theme'
+import { Menu, X } from 'lucide-react'
 
 const navLinks = [
   { href: '/', label: 'Hem' },
@@ -15,7 +14,6 @@ const navLinks = [
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
-  const { theme, toggleTheme } = useTheme()
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-wmb-red border-b border-red-700/30">
@@ -51,15 +49,6 @@ export default function Navbar() {
 
           {/* Right side */}
           <div className="flex items-center gap-2">
-            {/* Theme toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg text-white hover:bg-white/20 transition-colors"
-              aria-label="Byt tema"
-            >
-              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-            </button>
-
             {/* CTA button */}
             <Link
               href="/kontakt"

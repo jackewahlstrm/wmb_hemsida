@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Paintbrush, Home, Building2, Layers, Wallpaper, Hammer, SprayCan, Ruler, Wrench, ClipboardList, Palette, Droplets } from 'lucide-react'
+import { Paintbrush, Home, Building2, Layers, Wallpaper, Hammer, SprayCan, Ruler, Wrench, ClipboardList, Palette, Droplets, ChevronDown } from 'lucide-react'
 import WithSkeleton from '@/components/WithSkeleton'
 import { ServicesSkeleton } from '@/components/PageSkeleton'
 
@@ -110,15 +110,29 @@ function TjansterContent() {
   const slugParam = searchParams.get('service')
   const initialIndex = slugParam ? services.findIndex((s) => s.slug === slugParam) : 0
   const [active, setActive] = useState(initialIndex >= 0 ? initialIndex : 0)
+  const desktopPreviewRef = useRef<HTMLDivElement>(null)
+  const mobileItemRefs = useRef<(HTMLDivElement | null)[]>([])
 
   useEffect(() => {
-    if (slugParam) {
-      const i = services.findIndex((s) => s.slug === slugParam)
-      if (i >= 0) setActive(i)
-    }
+    if (!slugParam) return
+    const i = services.findIndex((s) => s.slug === slugParam)
+    if (i < 0) return
+    setActive(i)
+
+    // Vänta så accordion hinner fällas ut innan vi scrollar
+    const timer = setTimeout(() => {
+      const isDesktop = window.matchMedia('(min-width: 1024px)').matches
+      const target = isDesktop ? desktopPreviewRef.current : mobileItemRefs.current[i]
+      if (!target) return
+      const navbarOffset = isDesktop ? 120 : 96
+      const top = target.getBoundingClientRect().top + window.scrollY - navbarOffset
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+    }, 150)
+
+    return () => clearTimeout(timer)
   }, [slugParam])
 
-  const service = services[active]
+  const service = services[active] ?? services[0]
 
   return (
     <WithSkeleton skeleton={<ServicesSkeleton />}>
@@ -136,8 +150,8 @@ function TjansterContent() {
         </div>
       </section>
 
-      {/* Tabs + preview */}
-      <section className="py-10 sm:py-14">
+      {/* Tabs + preview (desktop) */}
+      <section className="hidden lg:block py-10 sm:py-14">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Tabs (pillar) */}
           <div className="flex flex-wrap justify-center gap-2 mb-6">
@@ -161,7 +175,7 @@ function TjansterContent() {
           </div>
 
           {/* Preview-panel */}
-          <div className="relative rounded-2xl overflow-hidden bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl">
+          <div ref={desktopPreviewRef} className="relative rounded-2xl overflow-hidden bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl">
             <div key={active} className="animate-fade-in grid grid-cols-1 lg:grid-cols-2">
               {/* Bild */}
               <div className="relative h-72 lg:h-[480px]">
@@ -202,6 +216,76 @@ function TjansterContent() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Accordion (mobile + tablet) */}
+      <section className="lg:hidden py-8">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 space-y-2">
+          {services.map((s, i) => {
+            const isOpen = active === i
+            return (
+              <div
+                key={s.slug}
+                ref={(el) => { mobileItemRefs.current[i] = el }}
+                className="rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 overflow-hidden transition-shadow"
+              >
+                <button
+                  type="button"
+                  onClick={() => setActive(isOpen ? -1 : i)}
+                  aria-expanded={isOpen}
+                  className="w-full flex items-center gap-3 px-4 py-3.5 text-left"
+                >
+                  <div
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                      isOpen ? 'bg-wmb-red text-white' : 'bg-wmb-blue/10 text-wmb-blue'
+                    }`}
+                  >
+                    <s.icon size={18} />
+                  </div>
+                  <h3 className="flex-1 font-semibold text-zinc-900 dark:text-white text-base">
+                    {s.title}
+                  </h3>
+                  <ChevronDown
+                    size={20}
+                    className={`shrink-0 text-zinc-400 transition-transform duration-300 ${
+                      isOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+                {isOpen && (
+                  <div className="border-t border-zinc-200 dark:border-zinc-800 animate-fade-in">
+                    {s.image && (
+                      <div className="relative h-48 sm:h-56 overflow-hidden">
+                        <img src={s.image} alt={s.title} className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    <div className="p-4 space-y-4">
+                      <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                        {s.description}
+                      </p>
+                      <div>
+                        <h4 className="text-xs font-semibold text-zinc-900 dark:text-white mb-2 uppercase tracking-wider">
+                          Vad vi erbjuder
+                        </h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          {s.features.map((feature) => (
+                            <div
+                              key={feature}
+                              className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400"
+                            >
+                              <div className="w-1.5 h-1.5 bg-wmb-red rounded-full shrink-0" />
+                              {feature}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       </section>
 

@@ -1,51 +1,20 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
-
-type Theme = 'light' | 'dark'
-
-interface ThemeContextType {
-  theme: Theme
-  toggleTheme: () => void
-}
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
+import { useEffect } from 'react'
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light')
-  const [mounted, setMounted] = useState(false)
-
   useEffect(() => {
-    setMounted(true)
-    const stored = localStorage.getItem('wmb-theme') as Theme | null
-    if (stored) {
-      setTheme(stored)
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setTheme('dark')
+    document.documentElement.classList.remove('dark')
+    try {
+      localStorage.removeItem('wmb-theme')
+    } catch {
+      // ignore
     }
   }, [])
 
-  useEffect(() => {
-    if (!mounted) return
-    document.documentElement.classList.toggle('dark', theme === 'dark')
-    localStorage.setItem('wmb-theme', theme)
-  }, [theme, mounted])
-
-  const toggleTheme = () => {
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'))
-  }
-
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  )
+  return <>{children}</>
 }
 
 export function useTheme() {
-  const context = useContext(ThemeContext)
-  if (!context) {
-    return { theme: 'light' as Theme, toggleTheme: () => {} }
-  }
-  return context
+  return { theme: 'light' as const, toggleTheme: () => {} }
 }
