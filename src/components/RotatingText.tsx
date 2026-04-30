@@ -25,7 +25,6 @@ interface RotatingTextProps {
   mainClassName?: string;
   splitLevelClassName?: string;
   elementLevelClassName?: string;
-  [key: string]: unknown;
 }
 
 export interface RotatingTextRef {
